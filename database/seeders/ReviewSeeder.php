@@ -25,7 +25,7 @@ class ReviewSeeder extends Seeder
                 'user_id' => $users[$i % $userCount]->id,
                 'book_id' => $books[$i % $bookCount]->id,
                 'rating' => fake()->numberBetween(3, 5),
-                'comment' => fake()->realText(150),
+                'comment' => fake('ja_JP')->realText(150),
             ]);
         }
     }
