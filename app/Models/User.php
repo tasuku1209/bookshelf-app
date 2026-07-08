@@ -59,4 +59,12 @@ class User extends Authenticatable
     {
         return $this->hasMany(Genre::class);
     }
+
+    /**
+     * 投稿したいいね
+     */
+    public function likes(): HasMany
+    {
+        return $this->hasMany(Like::class);
+    }
 }
