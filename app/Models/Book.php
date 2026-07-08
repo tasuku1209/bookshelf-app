@@ -51,10 +51,10 @@ class Book extends Model
     }
 
     /**
-     * お気に入り
+     * お気に入りしているユーザー
      */
-    public function favorites(): HasMany
+    public function favoriteUsers(): BelongsToMany
     {
-        return $this->hasMany(Favorite::class);
+        return $this->belongsToMany(User::class, 'favorites');
     }
 }
