@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
@@ -45,11 +46,11 @@ class User extends Authenticatable
     }
 
     /**
-     * お気に入り
+     * お気に入りしている書籍
      */
-    public function favorites(): HasMany
+    public function favoriteBooks(): BelongsToMany
     {
-        return $this->hasMany(Favorite::class);
+        return $this->belongsToMany(Book::class, 'favorites');
     }
 
     /**
@@ -61,10 +62,10 @@ class User extends Authenticatable
     }
 
     /**
-     * 投稿したいいね
+     * いいねしたレビュー
      */
-    public function likes(): HasMany
+    public function likedReviews(): BelongsToMany
     {
-        return $this->hasMany(Like::class);
+        return $this->belongsToMany(Review::class, 'review_likes');
     }
 }
