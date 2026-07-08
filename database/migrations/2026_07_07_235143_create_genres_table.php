@@ -13,7 +13,7 @@ return new class extends Migration
             $table->foreignId('user_id')
                 ->constrained()
                 ->onDelete('cascade');
-            $table->string('name')->unique();
+            $table->string('name', 255)->unique();
             $table->timestamps();
         });
     }
