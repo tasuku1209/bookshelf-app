@@ -22,10 +22,6 @@ class Book extends Model
         'image_url',
     ];
 
-    protected $casts = [
-        'published_date' => 'date',
-    ];
-
     /**
      * 登録ユーザー
      */
