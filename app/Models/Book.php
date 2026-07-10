@@ -53,7 +53,7 @@ class Book extends Model
     /**
      * お気に入りしているユーザー
      */
-    public function favoriteUsers(): BelongsToMany
+    public function favoritedUsers(): BelongsToMany
     {
         return $this->belongsToMany(User::class, 'favorites');
     }
