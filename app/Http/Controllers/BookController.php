@@ -78,7 +78,7 @@ class BookController extends Controller
 
         $book->load('genres');
 
-        $genres = Genre::orderBy('id')->get();
+        $genres = Genre::orderBy('name')->get();
 
         return view('books.edit', compact('book', 'genres'));
     }
