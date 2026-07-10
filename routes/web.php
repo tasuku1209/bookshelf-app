@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\BookController;
+use App\Http\Controllers\ReviewController;
 use Illuminate\Support\Facades\Route;
 
 // ログアウト後のリダイレクト先を指定
@@ -15,6 +16,18 @@ Route::middleware('auth')->group(function () {
         ->only([
             'create',
             'store',
+            'edit',
+            'update',
+            'destroy',
+        ]);
+
+    // レビュー投稿
+    Route::post('/books/{book}/reviews', [ReviewController::class, 'store'])
+        ->name('reviews.store');
+
+    // レビュー編集・更新・削除
+    Route::resource('reviews', ReviewController::class)
+        ->only([
             'edit',
             'update',
             'destroy',
