@@ -22,10 +22,6 @@ class Book extends Model
         'image_url',
     ];
 
-    protected $casts = [
-        'published_date' => 'date',
-    ];
-
     /**
      * 登録ユーザー
      */
@@ -53,7 +49,7 @@ class Book extends Model
     /**
      * お気に入りしているユーザー
      */
-    public function favoriteUsers(): BelongsToMany
+    public function favoritedUsers(): BelongsToMany
     {
         return $this->belongsToMany(User::class, 'favorites');
     }

@@ -1,7 +1,9 @@
 <?php
 
 use App\Http\Controllers\BookController;
+use App\Http\Controllers\FavoriteController;
 use App\Http\Controllers\ReviewController;
+use App\Http\Controllers\ReviewLikeController;
 use Illuminate\Support\Facades\Route;
 
 // ログアウト後のリダイレクト先を指定
@@ -32,6 +34,16 @@ Route::middleware('auth')->group(function () {
             'update',
             'destroy',
         ]);
+
+    // お気に入り
+    Route::post('/books/{book}/favorites', [FavoriteController::class, 'toggle'])
+        ->name('favorites.toggle');
+    Route::get('/favorites', [FavoriteController::class, 'index'])
+        ->name('favorites.index');
+
+    // レビューいいね
+    Route::post('/reviews/{review}/like', [ReviewLikeController::class, 'toggle'])
+        ->name('reviews.like');
 });
 
 // 公開ルート
@@ -43,10 +55,6 @@ Route::resource('books', BookController::class)
 Route::get('/ranking', function () {
     return view('ranking.index');
 })->name('ranking.index');
-
-Route::get('/favorites', function () {
-    return view('favorites.index');
-})->name('favorites.index');
 
 Route::get('/genres', function () {
     return view('genres.index');
