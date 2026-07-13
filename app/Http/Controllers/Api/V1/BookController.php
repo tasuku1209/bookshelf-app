@@ -42,10 +42,11 @@ class BookController extends Controller
             });
         }
 
-        $books = $query->latest()
-            ->paginate(
-                $validated['per_page'] ?? 20
-            );
+        $books = $query
+            ->latest()
+            ->orderByDesc('id')
+            ->paginate($validated['per_page'] ?? 20)
+            ->withQueryString();
 
         return BookResource::collection($books);
     }
