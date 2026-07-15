@@ -7,9 +7,9 @@ use App\Http\Requests\Api\V1\IndexBookRequest;
 use App\Http\Requests\Api\V1\StoreBookRequest;
 use App\Http\Requests\Api\V1\UpdateBookRequest;
 use App\Http\Resources\BookDetailResource;
-use App\Http\Resources\BookResource;
+use App\Http\Resources\BookIndexResource;
+use App\Http\Resources\BookResponseResource;
 use App\Models\Book;
-use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
@@ -23,7 +23,11 @@ class BookController extends Controller
         $validated = $request->validated();
 
         $query = Book::query()
-            ->with('genres')
+            ->with([
+                'genres' => function ($query) {
+                    $query->orderBy('genres.name');
+                },
+            ])
             ->withAvg('reviews', 'rating')
             ->withCount('reviews');
 
@@ -43,12 +47,17 @@ class BookController extends Controller
         }
 
         $books = $query
-            ->latest()
-            ->orderByDesc('id')
-            ->paginate($validated['per_page'] ?? 20)
+            ->orderByDesc('books.created_at')
+            ->orderByDesc('books.id')
+            ->paginate(
+                $validated['per_page'] ?? 20,
+                ['*'],
+                'page',
+                $validated['page'] ?? 1
+            )
             ->withQueryString();
 
-        return BookResource::collection($books);
+        return BookIndexResource::collection($books);
     }
 
     /**
@@ -58,24 +67,23 @@ class BookController extends Controller
     {
         $validated = $request->validated();
 
-        $user = User::where('email', $validated['email'])->first();
-
         $genres = $validated['genres'];
 
-        unset($validated['email']);
         unset($validated['genres']);
-
-        $validated['user_id'] = $user->id;
 
         $book = Book::create($validated);
 
         $book->genres()->sync($genres);
 
+        $book->load([
+            'genres' => function ($query) {
+                $query->orderBy('genres.name');
+            },
+        ]);
+
         return response()->json([
-            'data' => [
-                'id' => $book->id,
-                'title' => $book->title,
-            ],
+            'message' => '書籍を登録しました',
+            'data' => new BookResponseResource($book),
         ], 201);
     }
 
@@ -85,9 +93,22 @@ class BookController extends Controller
     public function show(Book $book): BookDetailResource
     {
         $book->load([
-            'genres',
-            'reviews.user',
-        ]);
+            'genres' => function ($query) {
+                $query->orderBy('genres.name');
+            },
+            'reviews' => function ($query) {
+                $query
+                    ->orderByDesc('reviews.created_at')
+                    ->orderByDesc('reviews.id')
+                    ->with([
+                        'user',
+                        'likedByUsers',
+                    ])
+                    ->withCount('likedByUsers');
+            },
+        ])
+            ->loadAvg('reviews', 'rating')
+            ->loadCount('reviews');
 
         return new BookDetailResource($book);
     }
@@ -99,28 +120,24 @@ class BookController extends Controller
     {
         $validated = $request->validated();
 
-        $user = User::where('email', $validated['email'])->first();
-
-        if ($book->user_id !== $user->id) {
-            return response()->json([
-                'message' => 'この書籍を更新する権限がありません。',
-            ], 403);
-        }
-
         $genres = $validated['genres'];
 
-        unset($validated['email']);
+        unset($validated['user_id']);
         unset($validated['genres']);
 
         $book->update($validated);
 
         $book->genres()->sync($genres);
 
+        $book->load([
+            'genres' => function ($query) {
+                $query->orderBy('genres.name');
+            },
+        ]);
+
         return response()->json([
-            'data' => [
-                'id' => $book->id,
-                'title' => $book->title,
-            ],
+            'message' => '書籍を更新しました',
+            'data' => new BookResponseResource($book),
         ]);
     }
 

@@ -14,12 +14,10 @@ class StoreBookRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'email' => [
+            'user_id' => [
                 'required',
-                'string',
-                'email',
-                'max:255',
-                'exists:users,email',
+                'integer',
+                'exists:users,id',
             ],
             'title' => ['required', 'string', 'max:255'],
             'author' => ['required', 'string', 'max:255'],
@@ -35,10 +33,9 @@ class StoreBookRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'email.required' => 'メールアドレスを入力してください',
-            'email.email' => 'メールアドレスはメール形式で入力してください',
-            'email.max' => 'メールアドレスは255文字以内で入力してください',
-            'email.exists' => '指定されたメールアドレスのユーザーは存在しません',
+            'user_id.required' => 'ユーザーIDを入力してください',
+            'user_id.integer' => 'ユーザーIDは数値で入力してください',
+            'user_id.exists' => '指定されたユーザーは存在しません',
             'title.required' => 'タイトルを入力してください',
             'title.max' => 'タイトルは255文字以内で入力してください',
             'author.required' => '著者名を入力してください',
