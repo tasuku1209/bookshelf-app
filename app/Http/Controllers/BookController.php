@@ -16,8 +16,14 @@ class BookController extends Controller
      */
     public function index(): View
     {
-        $books = Book::with('genres')
+        $books = Book::with([
+            'genres' => function ($query) {
+                $query->orderBy('genres.name');
+            },
+        ])
             ->withAvg('reviews', 'rating')
+            ->orderByDesc('books.created_at')
+            ->orderByDesc('books.id')
             ->paginate(10);
 
         return view('books.index', compact('books'));
@@ -61,9 +67,18 @@ class BookController extends Controller
     public function show(Book $book): View
     {
         $book->load([
-            'genres',
-            'reviews.user',
-            'reviews.likedByUsers',
+            'genres' => function ($query) {
+                $query->orderBy('genres.name');
+            },
+            'reviews' => function ($query) {
+                $query
+                    ->orderByDesc('reviews.created_at')
+                    ->orderByDesc('reviews.id')
+                    ->with([
+                        'user',
+                        'likedByUsers',
+                    ]);
+            },
         ]);
 
         return view('books.show', compact('book'));

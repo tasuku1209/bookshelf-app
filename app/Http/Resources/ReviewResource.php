@@ -17,6 +17,11 @@ class ReviewResource extends JsonResource
             'rating' => $this->rating,
             'comment' => $this->comment,
             'created_at' => $this->created_at,
+            'updated_at' => $this->updated_at,
+            'liked_by_users' => UserResource::collection(
+                $this->whenLoaded('likedByUsers')
+            ),
+            'likes_count' => $this->liked_by_users_count,
         ];
     }
 }

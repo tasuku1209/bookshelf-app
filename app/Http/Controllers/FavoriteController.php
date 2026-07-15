@@ -31,14 +31,16 @@ class FavoriteController extends Controller
     public function index(): View
     {
         $books = auth()->user()->favoriteBooks()
-            ->latest('books.created_at')
+            ->orderByDesc('favorites.created_at')
+            ->orderByDesc('books.id')
             ->paginate(10);
 
         /** @var User $user */
         /*
         $user = auth()->user();
         $books = $user->favoriteBooks()
-            ->latest('books.created_at')
+            ->orderByDesc('favorites.created_at')
+            ->orderByDesc('books.id')
             ->paginate(10);
         */
 
