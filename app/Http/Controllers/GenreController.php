@@ -52,7 +52,13 @@ class GenreController extends Controller
     public function show(Genre $genre): View
     {
         $books = $genre->books()
-            ->with('genres')
+            ->with([
+                'genres' => function ($query) {
+                    $query->orderBy('genres.name');
+                },
+            ])
+            ->orderByDesc('books.created_at')
+            ->orderByDesc('books.id')
             ->paginate(10);
 
         return view('genres.show', compact('genre', 'books'));
