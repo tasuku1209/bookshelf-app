@@ -256,7 +256,7 @@ class BookControllerTest extends TestCase
         ]);
     }
 
-    public function test_isb_nが13桁でない場合は登録できない(): void
+    public function test_isbnが13桁でない場合は登録できない(): void
     {
         // Arrange
         $user = User::factory()->create();
@@ -360,7 +360,7 @@ class BookControllerTest extends TestCase
         ]);
     }
 
-    public function test_isb_nが重複する場合は登録できない(): void
+    public function test_isbnが重複する場合は登録できない(): void
     {
         // Arrange
         $user = User::factory()->create();
@@ -619,7 +619,7 @@ class BookControllerTest extends TestCase
         ]);
     }
 
-    public function test_isb_nが13桁でない場合は更新できない(): void
+    public function test_isbnが13桁でない場合は更新できない(): void
     {
         // Arrange
         $user = User::factory()->create();
@@ -748,7 +748,7 @@ class BookControllerTest extends TestCase
         ]);
     }
 
-    public function test_重複する_isb_nは更新できない(): void
+    public function test_重複する_isbnは更新できない(): void
     {
         // Arrange
         $user = User::factory()->create();
