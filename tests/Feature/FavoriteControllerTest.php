@@ -121,10 +121,11 @@ class FavoriteControllerTest extends TestCase
         // Act1 お気に入り登録
         $response = $this
             ->actingAs($user)
+            ->from(route('books.show', $book))
             ->post(route('favorites.toggle', $book));
 
         // Assert1
-        $response->assertRedirect();
+        $response->assertRedirect(route('books.show', $book));
 
         $this->assertDatabaseHas('favorites', [
             'user_id' => $user->id,
@@ -134,10 +135,11 @@ class FavoriteControllerTest extends TestCase
         // Act2 お気に入り解除
         $response = $this
             ->actingAs($user)
+            ->from(route('books.show', $book))
             ->post(route('favorites.toggle', $book));
 
         // Assert2
-        $response->assertRedirect();
+        $response->assertRedirect(route('books.show', $book));
 
         $this->assertDatabaseMissing('favorites', [
             'user_id' => $user->id,
@@ -147,10 +149,11 @@ class FavoriteControllerTest extends TestCase
         // Act3 再度お気に入り登録
         $response = $this
             ->actingAs($user)
+            ->from(route('books.show', $book))
             ->post(route('favorites.toggle', $book));
 
         // Assert3
-        $response->assertRedirect();
+        $response->assertRedirect(route('books.show', $book));
 
         $this->assertDatabaseHas('favorites', [
             'user_id' => $user->id,
