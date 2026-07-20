@@ -122,7 +122,6 @@ class BookController extends Controller
 
         $genres = $validated['genres'];
 
-        unset($validated['user_id']);
         unset($validated['genres']);
 
         $book->update($validated);
