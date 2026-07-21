@@ -308,7 +308,7 @@ class BookControllerTest extends TestCase
         ]);
     }
 
-    public function test_画像_ur_lが_ur_l形式でない場合は登録できない(): void
+    public function test_画像_urlが_url形式でない場合は登録できない(): void
     {
         // Arrange
         $user = User::factory()->create();
@@ -683,7 +683,7 @@ class BookControllerTest extends TestCase
         ]);
     }
 
-    public function test_画像_ur_lが_ur_l形式でない場合は更新できない(): void
+    public function test_画像_urlが_url形式でない場合は更新できない(): void
     {
         // Arrange
         $user = User::factory()->create();
