@@ -15,6 +15,10 @@ Route::get('/', function () {
 
 // 認証ルート
 Route::middleware('auth')->group(function () {
+    // ISBN検索
+    Route::get('/books/isbn/{isbn}', [BookController::class, 'searchByIsbn'])
+        ->name('books.isbn');
+
     // 書籍の作成、編集、削除
     Route::resource('books', BookController::class)
         ->only([
