@@ -6,11 +6,59 @@ use App\Http\Requests\StoreBookRequest;
 use App\Http\Requests\UpdateBookRequest;
 use App\Models\Book;
 use App\Models\Genre;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Facades\Http;
 use Illuminate\View\View;
 
 class BookController extends Controller
 {
+    /**
+     * ISBN検索
+     */
+    public function searchByIsbn(string $isbn): JsonResponse
+    {
+        try {
+            $response = Http::get(
+                'https://www.googleapis.com/books/v1/volumes',
+                [
+                    'q' => 'isbn:'.$isbn,
+                    'key' => config('services.google_books.api_key'),
+                ]
+            );
+
+            // Google APIエラー
+            if ($response->failed()) {
+                return response()->json([
+                    'error' => '現在、書籍情報を取得できません。しばらくしてからお試しください。',
+                ], 500);
+            }
+
+            $data = $response->json();
+
+            // 該当書籍なし
+            if (($data['totalItems'] ?? 0) === 0) {
+                return response()->json([
+                    'error' => '書籍情報が見つかりませんでした。',
+                ], 404);
+            }
+
+            $book = $data['items'][0]['volumeInfo'];
+
+            return response()->json([
+                'title' => $book['title'] ?? '',
+                'author' => $book['authors'][0] ?? '',
+                'published_date' => $book['publishedDate'] ?? '',
+                'description' => $book['description'] ?? '',
+                'image_url' => $book['imageLinks']['thumbnail'] ?? '',
+            ]);
+        } catch (\Throwable $e) {
+            return response()->json([
+                'error' => '現在、書籍情報を取得できません。しばらくしてからお試しください。',
+            ], 500);
+        }
+    }
+
     /**
      * 書籍一覧
      */
