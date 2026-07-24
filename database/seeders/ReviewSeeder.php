@@ -14,19 +14,27 @@ class ReviewSeeder extends Seeder
         $users = User::all();
         $books = Book::all();
 
-        $totalReviews = 32;
+        foreach ($books as $book) {
 
-        $userCount = $users->count();
-        $bookCount = $books->count();
+            $reviewCount = fake()->numberBetween(2, 4);
 
-        for ($i = 0; $i < $totalReviews; $i++) {
+            for ($i = 0; $i < $reviewCount; $i++) {
 
-            Review::create([
-                'user_id' => $users[$i % $userCount]->id,
-                'book_id' => $books[$i % $bookCount]->id,
-                'rating' => fake()->numberBetween(3, 5),
-                'comment' => fake('ja_JP')->realText(150),
-            ]);
+                $rating = fake()->numberBetween(1, 5);
+
+                Review::create([
+                    'user_id' => $users->random()->id,
+                    'book_id' => $book->id,
+                    'rating' => $rating,
+                    'comment' => match ($rating) {
+                        5 => 'とても良い内容でした。',
+                        4 => '満足できる内容でした。',
+                        3 => '普通に楽しめました。',
+                        2 => '少し物足りませんでした。',
+                        1 => '期待していた内容ではありませんでした。',
+                    },
+                ]);
+            }
         }
     }
 }
