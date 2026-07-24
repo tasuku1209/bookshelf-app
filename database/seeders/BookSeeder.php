@@ -105,7 +105,7 @@ class BookSeeder extends Seeder
                     'author' => $data['author'],
                     'published_date' => $data['published_date'],
                     'description' => fake('ja_JP')->realText(150),
-                    'image_url' => 'https://placehold.co/200x300/e2e8f0/475569?text=' . ($index + 1),
+                    'image_url' => 'https://placehold.co/200x300/e2e8f0/475569?text='.($index + 1),
                 ]
             );
 
