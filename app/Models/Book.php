@@ -22,6 +22,10 @@ class Book extends Model
         'image_url',
     ];
 
+    protected $casts = [
+        'published_date' => 'date',
+    ];
+
     /**
      * 登録ユーザー
      */
@@ -54,5 +58,13 @@ class Book extends Model
     {
         return $this->belongsToMany(User::class, 'favorites')
             ->withTimestamps();
+    }
+
+    /**
+     * 読書計画
+     */
+    public function readingPlans(): HasMany
+    {
+        return $this->hasMany(ReadingPlan::class);
     }
 }
