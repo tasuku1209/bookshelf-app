@@ -11,7 +11,7 @@ class BookSeeder extends Seeder
 {
     public function run(): void
     {
-        $user = User::first();
+        $user = User::all();
 
         $books = [
             [
@@ -100,12 +100,12 @@ class BookSeeder extends Seeder
                     'isbn' => $data['isbn'],
                 ],
                 [
-                    'user_id' => $user->id,
+                    'user_id' => $user->random()->id,
                     'title' => $data['title'],
                     'author' => $data['author'],
                     'published_date' => $data['published_date'],
                     'description' => fake('ja_JP')->realText(150),
-                    'image_url' => 'https://placehold.co/200x300/e2e8f0/475569?text='.($index + 1),
+                    'image_url' => 'https://placehold.co/200x300/e2e8f0/475569?text=' . ($index + 1),
                 ]
             );
 
