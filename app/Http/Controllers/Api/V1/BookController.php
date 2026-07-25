@@ -22,31 +22,16 @@ class BookController extends Controller
     {
         $validated = $request->validated();
 
-        $query = Book::query()
+        $books = Book::query()
             ->with([
                 'genres' => function ($query) {
                     $query->orderBy('genres.name');
                 },
             ])
             ->withAvg('reviews', 'rating')
-            ->withCount('reviews');
-
-        // キーワード検索（タイトル・著者）
-        if (! empty($validated['keyword'])) {
-            $query->where(function ($query) use ($validated) {
-                $query->where('title', 'like', '%'.$validated['keyword'].'%')
-                    ->orWhere('author', 'like', '%'.$validated['keyword'].'%');
-            });
-        }
-
-        // ジャンル絞り込み
-        if (! empty($validated['genre_id'])) {
-            $query->whereHas('genres', function ($query) use ($validated) {
-                $query->where('genres.id', $validated['genre_id']);
-            });
-        }
-
-        $books = $query
+            ->withCount('reviews')
+            ->keyword($validated['keyword'] ?? null) // キーワード検索（タイトル・著者）
+            ->genre($validated['genre_id'] ?? null)  // ジャンル絞り込み
             ->orderByDesc('books.created_at')
             ->orderByDesc('books.id')
             ->paginate(

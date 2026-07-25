@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\IndexBookRequest;
 use App\Http\Requests\StoreBookRequest;
 use App\Http\Requests\UpdateBookRequest;
 use App\Models\Book;
@@ -62,19 +63,27 @@ class BookController extends Controller
     /**
      * 書籍一覧
      */
-    public function index(): View
+    public function index(IndexBookRequest $request): View
     {
-        $books = Book::with([
-            'genres' => function ($query) {
-                $query->orderBy('genres.name');
-            },
-        ])
-            ->withAvg('reviews', 'rating')
-            ->orderByDesc('books.created_at')
-            ->orderByDesc('books.id')
-            ->paginate(10);
+        $sort = $request->sort ?? 'newest';
 
-        return view('books.index', compact('books'));
+        $genres = Genre::orderBy('name')->get();
+
+        $books = Book::query()
+            ->with([
+                'genres' => function ($query) {
+                    $query->orderBy('genres.name');
+                },
+            ])
+            ->withAvg('reviews', 'rating')
+            ->withCount('reviews')
+            ->keyword($request->keyword)
+            ->genre($request->genre)
+            ->sort($sort)
+            ->paginate(10)
+            ->withQueryString();
+
+        return view('books.index', compact('books', 'genres'));
     }
 
     /**
