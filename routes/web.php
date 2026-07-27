@@ -4,6 +4,7 @@ use App\Http\Controllers\BookController;
 use App\Http\Controllers\FavoriteController;
 use App\Http\Controllers\GenreController;
 use App\Http\Controllers\RankingController;
+use App\Http\Controllers\ReportController;
 use App\Http\Controllers\ReviewController;
 use App\Http\Controllers\ReviewLikeController;
 use Illuminate\Support\Facades\Route;
@@ -15,9 +16,6 @@ Route::get('/', function () {
 
 // 認証ルート
 Route::middleware('auth')->group(function () {
-    // ISBN検索
-    Route::get('/books/isbn/{isbn}', [BookController::class, 'searchByIsbn'])
-        ->name('books.isbn');
 
     // 書籍の作成、編集、削除
     Route::resource('books', BookController::class)
@@ -28,6 +26,10 @@ Route::middleware('auth')->group(function () {
             'update',
             'destroy',
         ]);
+
+    // ISBN検索
+    Route::get('/books/isbn/{isbn}', [BookController::class, 'searchByIsbn'])
+        ->name('books.isbn');
 
     // レビュー投稿
     Route::post('/books/{book}/reviews', [ReviewController::class, 'store'])
@@ -53,6 +55,10 @@ Route::middleware('auth')->group(function () {
 
     // ジャンル管理
     Route::resource('genres', GenreController::class);
+
+    // マイ読書レポート
+    Route::get('/reports', [ReportController::class, 'index'])
+        ->name('reports.index');
 });
 
 // 公開ルート
