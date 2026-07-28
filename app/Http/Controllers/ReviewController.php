@@ -15,11 +15,12 @@ class ReviewController extends Controller
      */
     public function store(ReviewRequest $request, Book $book): RedirectResponse
     {
-        $book->reviews()->create([
-            'user_id' => auth()->id(),
-            'rating' => $request->validated()['rating'],
-            'comment' => $request->validated()['comment'],
-        ]);
+        $validated = $request->validated();
+
+        $validated['user_id'] = auth()->id();
+        $validated['book_id'] = $book->id;
+
+        Review::create($validated);
 
         return redirect()
             ->route('books.show', $book)
