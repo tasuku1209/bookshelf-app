@@ -115,9 +115,6 @@ class Book extends Model
                 ->orderByDesc('reviews_count')
                 ->orderByDesc('created_at')
                 ->orderByDesc('id'),
-
-            default => $query->orderByDesc('created_at')
-                ->orderByDesc('id'),
         };
     }
 }
