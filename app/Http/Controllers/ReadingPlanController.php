@@ -105,7 +105,16 @@ class ReadingPlanController extends Controller
     {
         $this->authorize('update', $plan);
 
-        $plan->update($request->validated());
+        $validated = $request->validated();
+
+        if (
+            $plan->status === ReadingPlanStatus::Overdue &&
+            $validated['target_date'] >= today()
+        ) {
+            $validated['status'] = ReadingPlanStatus::InProgress;
+        }
+
+        $plan->update($validated);
 
         return redirect()
             ->route('reading-plans.index')
