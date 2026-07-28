@@ -91,10 +91,10 @@ class ReadingPlanController extends Controller
 
         $books = Book::orderBy('title')->get();
 
-        return view('reading-plans.edit', compact(
-            'plan',
-            'books',
-        ));
+        return view('reading-plans.edit', [
+            'readingPlan' => $plan,
+            'books' => $books,
+        ]);
     }
 
     /**
@@ -102,6 +102,7 @@ class ReadingPlanController extends Controller
      */
     public function update(ReadingPlanRequest $request, ReadingPlan $plan): RedirectResponse
     {
+        dd('update実行');
         $this->authorize('update', $plan);
 
         $plan->update($request->validated());
