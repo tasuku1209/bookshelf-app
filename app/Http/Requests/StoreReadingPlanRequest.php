@@ -20,7 +20,11 @@ class StoreReadingPlanRequest extends FormRequest
                 'integer',
                 Rule::exists('books', 'id'),
             ],
-            'target_date' => ['required', 'date'],
+            'target_date' => [
+                'required',
+                'date',
+                'after_or_equal:today',
+            ],
         ];
     }
 
@@ -33,6 +37,7 @@ class StoreReadingPlanRequest extends FormRequest
 
             'target_date.required' => '期日を入力してください',
             'target_date.date' => '期日は日付形式で入力してください',
+            'target_date.after_or_equal' => '期日は今日以降の日付を指定してください',
         ];
     }
 }

@@ -23,7 +23,7 @@ class BookController extends Controller
             $response = Http::get(
                 'https://www.googleapis.com/books/v1/volumes',
                 [
-                    'q' => 'isbn:' . $isbn,
+                    'q' => 'isbn:'.$isbn,
                     'key' => config('services.google_books.api_key'),
                 ]
             );
