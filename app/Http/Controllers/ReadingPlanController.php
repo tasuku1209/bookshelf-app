@@ -48,6 +48,7 @@ class ReadingPlanController extends Controller
 
         $plan->update([
             'status' => ReadingPlanStatus::Completed,
+            'completed_at' => now(),
         ]);
 
         return redirect()
