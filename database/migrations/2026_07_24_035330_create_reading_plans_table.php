@@ -1,5 +1,6 @@
 <?php
 
+use App\Enums\ReadingPlanStatus;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
@@ -18,7 +19,8 @@ return new class extends Migration
                 ->onDelete('cascade');
             $table->date('target_date');
             $table->dateTime('completed_at')->nullable();
-            $table->string('status', 20);
+            $table->string('status', 20)
+                ->default(ReadingPlanStatus::InProgress->value);
             $table->timestamps();
         });
     }

@@ -4,6 +4,7 @@ use App\Http\Controllers\BookController;
 use App\Http\Controllers\FavoriteController;
 use App\Http\Controllers\GenreController;
 use App\Http\Controllers\RankingController;
+use App\Http\Controllers\ReadingPlanController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\ReviewController;
 use App\Http\Controllers\ReviewLikeController;
@@ -59,6 +60,19 @@ Route::middleware('auth')->group(function () {
     // マイ読書レポート
     Route::get('/reports', [ReportController::class, 'index'])
         ->name('reports.index');
+
+    // 読書計画
+    Route::resource('reading-plans', ReadingPlanController::class)
+        ->except('show')
+        ->parameters([
+            'reading-plans' => 'plan',
+        ]);
+
+    // 読了ボタン
+    Route::post(
+        'reading-plans/{plan}/complete',
+        [ReadingPlanController::class, 'complete']
+    )->name('reading-plans.complete');
 });
 
 // 公開ルート
