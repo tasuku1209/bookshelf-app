@@ -3,6 +3,7 @@
 use App\Http\Controllers\BookController;
 use App\Http\Controllers\FavoriteController;
 use App\Http\Controllers\GenreController;
+use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\RankingController;
 use App\Http\Controllers\ReadingPlanController;
 use App\Http\Controllers\ReportController;
@@ -73,6 +74,18 @@ Route::middleware('auth')->group(function () {
         'reading-plans/{plan}/complete',
         [ReadingPlanController::class, 'complete']
     )->name('reading-plans.complete');
+
+    // 通知一覧
+    Route::get(
+        'notifications',
+        [NotificationController::class, 'index']
+    )->name('notifications.index');
+
+    // 既読ボタン
+    Route::post(
+        'notifications/{id}/read',
+        [NotificationController::class, 'read']
+    )->name('notifications.read');
 });
 
 // 公開ルート
