@@ -4,7 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Enums\ReadingPlanStatus;
 use App\Http\Requests\IndexReadingPlanRequest;
-use App\Http\Requests\ReadingPlanRequest;
+use App\Http\Requests\StoreReadingPlanRequest;
+use App\Http\Requests\UpdateReadingPlanRequest;
 use App\Models\Book;
 use App\Models\ReadingPlan;
 use Illuminate\Contracts\View\View;
@@ -69,7 +70,7 @@ class ReadingPlanController extends Controller
     /**
      * 登録
      */
-    public function store(ReadingPlanRequest $request): RedirectResponse
+    public function store(StoreReadingPlanRequest $request): RedirectResponse
     {
         $validated = $request->validated();
 
@@ -100,9 +101,8 @@ class ReadingPlanController extends Controller
     /**
      * 更新
      */
-    public function update(ReadingPlanRequest $request, ReadingPlan $plan): RedirectResponse
+    public function update(UpdateReadingPlanRequest $request, ReadingPlan $plan): RedirectResponse
     {
-        dd('update実行');
         $this->authorize('update', $plan);
 
         $plan->update($request->validated());
