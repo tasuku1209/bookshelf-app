@@ -56,6 +56,8 @@ class BookController extends Controller
 
         unset($validated['genres']);
 
+        $validated['user_id'] = auth()->id();
+
         $book = Book::create($validated);
 
         $book->genres()->sync($genres);
@@ -103,6 +105,8 @@ class BookController extends Controller
      */
     public function update(UpdateBookRequest $request, Book $book): JsonResponse
     {
+        $this->authorize('update', $book);
+
         $validated = $request->validated();
 
         $genres = $validated['genres'];
@@ -122,7 +126,7 @@ class BookController extends Controller
         return response()->json([
             'message' => '書籍を更新しました',
             'data' => new BookResponseResource($book),
-        ]);
+        ], 200);
     }
 
     /**
@@ -130,6 +134,8 @@ class BookController extends Controller
      */
     public function destroy(Book $book): JsonResponse
     {
+        $this->authorize('delete', $book);
+
         $book->delete();
 
         return response()->json(null, 204);
