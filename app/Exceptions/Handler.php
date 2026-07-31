@@ -29,13 +29,20 @@ class Handler extends ExceptionHandler
         });
     }
 
-    // API404エラー
     public function render($request, Throwable $e)
     {
+        // API404エラー
         if ($request->is('api/*') && $e instanceof ModelNotFoundException) {
             return response()->json([
                 'error' => '指定されたデータは存在しません',
             ], 404);
+        }
+
+        // WEB404エラー
+        if (! $request->is('api/*') && $e instanceof ModelNotFoundException) {
+            return redirect()
+                ->route('books.index')
+                ->with('error', '指定されたデータは存在しません');
         }
 
         return parent::render($request, $e);
