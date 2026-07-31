@@ -2,6 +2,7 @@
 
 namespace App\Exceptions;
 
+use Illuminate\Auth\AuthenticationException;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Foundation\Exceptions\Handler as ExceptionHandler;
 use Throwable;
@@ -36,6 +37,13 @@ class Handler extends ExceptionHandler
             return response()->json([
                 'error' => '指定されたデータは存在しません',
             ], 404);
+        }
+
+        // API401エラー
+        if ($request->is('api/*') && $e instanceof AuthenticationException) {
+            return response()->json([
+                'message' => '認証が必要です',
+            ], 401);
         }
 
         // WEB404エラー
