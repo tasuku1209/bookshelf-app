@@ -16,7 +16,6 @@ class NotificationController extends Controller
         $notifications = $request->user()
             ->notifications()
             ->orderByDesc('created_at')
-            ->orderByDesc('id')
             ->get();
 
         return view('notifications.index', compact('notifications'));
