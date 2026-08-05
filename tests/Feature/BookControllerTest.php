@@ -7,6 +7,7 @@ use App\Models\Genre;
 use App\Models\Review;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Http;
 use Tests\TestCase;
 
 class BookControllerTest extends TestCase
@@ -24,6 +25,132 @@ class BookControllerTest extends TestCase
             'image_url' => 'https://example.com/image.jpg',
             'genres' => [$genre->id],
         ], $overrides);
+    }
+
+    public function test_isb_n検索で_isb_nに該当する書籍情報を取得できる(): void
+    {
+        // Arrange
+        $user = User::factory()->create();
+
+        $isbn = '1234567890123';
+
+        Http::fake([
+            'https://www.googleapis.com/books/v1/volumes*' => Http::response([
+                'totalItems' => 1,
+                'items' => [
+                    [
+                        'volumeInfo' => [
+                            'title' => 'タイトル',
+                            'authors' => ['著者'],
+                            'publishedDate' => '2026-01-01',
+                            'description' => '書籍の説明書き',
+                            'imageLinks' => [
+                                'thumbnail' => 'https://example.com/image.jpg',
+                            ],
+                        ],
+                    ],
+                ],
+            ], 200),
+        ]);
+
+        // Act
+        $response = $this->actingAs($user)->getJson("/books/isbn/{$isbn}");
+
+        // Assert
+        $response->assertStatus(200);
+
+        $response->assertJson([
+            'title' => 'タイトル',
+            'author' => '著者',
+            'published_date' => '2026-01-01',
+            'description' => '書籍の説明書き',
+            'image_url' => 'https://example.com/image.jpg',
+        ]);
+    }
+
+    public function test_isb_n検索で未認証の場合はログイン画面へリダイレクトされる(): void
+    {
+        // Arrange
+        $isbn = '1234567890123';
+
+        // Act
+        $response = $this->get("/books/isbn/{$isbn}");
+
+        // Assert
+        $response->assertRedirect('/login');
+    }
+
+    public function test_isb_n検索で該当書籍がない場合は404を返す(): void
+    {
+        // Arrange
+        $user = User::factory()->create();
+
+        $isbn = '1234567890123';
+
+        Http::fake([
+            'https://www.googleapis.com/books/v1/volumes*' => Http::response([
+                'totalItems' => 0,
+            ], 200),
+        ]);
+
+        // Act
+        $response = $this->actingAs($user)
+            ->get("/books/isbn/{$isbn}");
+
+        // Assert
+        $response->assertStatus(404);
+
+        $response->assertJson([
+            'error' => '書籍情報が見つかりませんでした。',
+        ]);
+    }
+
+    public function test_isb_n検索でエラーとなった場合は500を返す(): void
+    {
+        // Arrange
+        $user = User::factory()->create();
+
+        $isbn = '1234567890123';
+
+        Http::fake([
+            'https://www.googleapis.com/books/v1/volumes*' => Http::response([], 500),
+        ]);
+
+        // Act
+        $response = $this->actingAs($user)
+            ->get("/books/isbn/{$isbn}");
+
+        // Assert
+        $response->assertStatus(500);
+
+        $response->assertJson([
+            'error' => '現在、書籍情報を取得できません。しばらくしてからお試しください。',
+        ]);
+    }
+
+    public function test_isb_n検索で_ap_i通信の例外が発生した場合は500を返す(): void
+    {
+        // Arrange
+        $user = User::factory()->create();
+
+        $isbn = '1234567890123';
+
+        Http::fake([
+            'https://www.googleapis.com/books/v1/volumes*' => function () {
+                throw new \Exception('API通信エラー');
+            },
+        ]);
+
+        // Act
+        $response = $this->actingAs($user)
+            ->get("/books/isbn/{$isbn}");
+
+        // Assert
+        $response->assertStatus(500);
+
+        $response->assertJson([
+            'error' => '現在、書籍情報を取得できません。しばらくしてからお試しください。',
+        ]);
     }
 
     public function test_書籍一覧を表示できる(): void
@@ -72,6 +199,169 @@ class BookControllerTest extends TestCase
         ]);
     }
 
+    public function test_書籍一覧の評価順ソートで書籍のレートが同率の場合、レビュー件数順で表示する(): void
+    {
+        // Arrange
+        $book1 = Book::factory()->create([
+            'title' => 'レビュー数の少ない書籍',
+        ]);
+
+        $book2 = Book::factory()->create([
+            'title' => 'レビュー数の多い書籍',
+        ]);
+
+        Review::factory()->create([
+            'book_id' => $book1->id,
+            'rating' => 3,
+        ]);
+
+        Review::factory()->count(2)->create([
+            'book_id' => $book2->id,
+            'rating' => 3,
+        ]);
+
+        // Act
+        $response = $this->get(route('books.index', [
+            'sort' => 'rating',
+        ]));
+
+        // Assert
+        $response->assertOk();
+        $response->assertSeeInOrder([
+            'レビュー数の多い書籍',
+            'レビュー数の少ない書籍',
+        ]);
+    }
+
+    public function test_書籍一覧の評価順ソートで書籍のレート、レビュー件数が同率の場合、書籍最新順で表示する(): void
+    {
+        // Arrange
+        $book1 = Book::factory()->create([
+            'title' => '古い書籍',
+            'created_at' => now()->subDay(),
+        ]);
+
+        $book2 = Book::factory()->create([
+            'title' => '新しい書籍',
+            'created_at' => now(),
+        ]);
+
+        Review::factory()->count(2)->create([
+            'book_id' => $book1->id,
+            'rating' => 3,
+        ]);
+
+        Review::factory()->count(2)->create([
+            'book_id' => $book2->id,
+            'rating' => 3,
+        ]);
+
+        // Act
+        $response = $this->get(route('books.index', [
+            'sort' => 'rating',
+        ]));
+
+        // Assert
+        $response->assertOk();
+        $response->assertSeeInOrder([
+            '新しい書籍',
+            '古い書籍',
+        ]);
+    }
+
+    public function test_書籍一覧で、キーワード・ジャンル・並び順を組み合わせて検索できる(): void
+    {
+        // Arrange
+        $genre1 = Genre::factory()->create();
+        $genre2 = Genre::factory()->create();
+
+        $book1 = Book::factory()->create([
+            'title' => 'ジャンル1の検索対象の新しい書籍',
+            'author' => 'author',
+            'created_at' => now(),
+        ]);
+        $book1->genres()->attach($genre1);
+
+        $book2 = Book::factory()->create([
+            'title' => 'ジャンル1の検索対象の古い書籍',
+            'author' => 'author',
+            'created_at' => now()->subDay(),
+        ]);
+        $book2->genres()->attach($genre1);
+
+        $book3 = Book::factory()->create([
+            'title' => 'ジャンル1のtitle',
+            'author' => 'author',
+        ]);
+        $book3->genres()->attach($genre1);
+
+        $book4 = Book::factory()->create([
+            'title' => 'ジャンル2のtitle',
+            'author' => 'author',
+        ]);
+        $book4->genres()->attach($genre2);
+
+        // Act
+        $response = $this->get(route('books.index', [
+            'keyword' => '検索対象',
+            'genre' => $genre1->id,
+            'sort' => 'oldest',
+        ]));
+
+        // Assert
+        $response->assertOk();
+        $response->assertSeeInOrder([
+            'ジャンル1の検索対象の古い書籍',
+            'ジャンル1の検索対象の新しい書籍',
+        ]);
+        $response->assertDontSee('ジャンル1のtitle');
+        $response->assertDontSee('ジャンル2のtitle');
+    }
+
+    public function test_書籍一覧の検索機能でキーワードが文字数超過では検索できない(): void
+    {
+        // Act
+        $response = $this->get(route('books.index', [
+            'keyword' => str_repeat('a', 256),
+        ]));
+
+        // Assert
+        $response->assertSessionHasErrors('keyword');
+    }
+
+    public function test_書籍一覧の検索機能でジャンルが数値形式でない場合は検索できない(): void
+    {
+        // Act
+        $response = $this->get(route('books.index', [
+            'genre' => 'abc',
+        ]));
+
+        // Assert
+        $response->assertSessionHasErrors('genre');
+    }
+
+    public function test_書籍一覧の検索機能で存在しないジャンルでは検索できない(): void
+    {
+        // Act
+        $response = $this->get(route('books.index', [
+            'genre' => 999,
+        ]));
+
+        // Assert
+        $response->assertSessionHasErrors('genre');
+    }
+
+    public function test_書籍一覧の検索機能で許可されていない並び順では検索できない(): void
+    {
+        // Act
+        $response = $this->get(route('books.index', [
+            'sort' => 'invalid',
+        ]));
+
+        // Assert
+        $response->assertSessionHasErrors('sort');
+    }
+
     public function test_書籍一覧は10件でページネーションされる(): void
     {
         // Arrange
@@ -87,6 +377,53 @@ class BookControllerTest extends TestCase
 
         $this->assertEquals(10, $books->count());
         $this->assertEquals(11, $books->total());
+    }
+
+    public function test_書籍一覧で2ページ目に進んでも検索条件が維持される(): void
+    {
+        // Arrange
+        $genre1 = Genre::factory()->create();
+        $genre2 = Genre::factory()->create();
+
+        $books = Book::factory()->count(10)->create([
+            'title' => '検索対象の古い書籍',
+            'created_at' => now()->subDay(),
+        ]);
+        foreach ($books as $book) {
+            $book->genres()->attach($genre1);
+        }
+
+        $target = Book::factory()->create([
+            'title' => 'ジャンル1の検索対象の新しい本',
+            'created_at' => now(),
+        ]);
+        $target->genres()->attach($genre1);
+
+        $other1 = Book::factory()->create([
+            'title' => 'ジャンル1の新しい本',
+            'created_at' => now(),
+        ]);
+        $other1->genres()->attach($genre1);
+
+        $other2 = Book::factory()->create([
+            'title' => 'ジャンル2の新しい本',
+            'created_at' => now(),
+        ]);
+        $other2->genres()->attach($genre2);
+
+        // Act
+        $response = $this->get(route('books.index', [
+            'keyword' => '検索対象',
+            'genre' => $genre1->id,
+            'sort' => 'oldest',
+            'page' => 2,
+        ]));
+
+        // Assert
+        $response->assertOk();
+        $response->assertSee('ジャンル1の検索対象の新しい本');
+        $response->assertDontSee('ジャンル1の新しい本');
+        $response->assertDontSee('ジャンル2の新しい本');
     }
 
     public function test_書籍詳細を表示できる(): void
@@ -182,6 +519,35 @@ class BookControllerTest extends TestCase
         $response->assertRedirect(route('books.show', $book));
 
         $response->assertSessionHas('success', '書籍を登録しました');
+    }
+
+    public function test_isb_n、出版日を空白とした書籍でも登録できる(): void
+    {
+        // Arrange
+        $user = User::factory()->create();
+
+        $genre = Genre::factory()->create();
+
+        $data = $this->validBookData($genre, [
+            'title' => 'タイトル',
+            'isbn' => '',
+            'published_date' => '',
+        ]);
+
+        // Act
+        $response = $this
+            ->actingAs($user)
+            ->post(route('books.store'), $data);
+
+        // Assert
+        $response->assertRedirect();
+
+        $this->assertDatabaseHas('books', [
+            'title' => 'タイトル',
+            'isbn' => null,
+            'published_date' => null,
+            'user_id' => $user->id,
+        ]);
     }
 
     public function test_ゲストユーザーは書籍を登録できない(): void
@@ -498,6 +864,41 @@ class BookControllerTest extends TestCase
         $response->assertSessionHas('success', '書籍を更新しました');
     }
 
+    public function test_isb_n、出版日を空白とした書籍でも更新できる(): void
+    {
+        // Arrange
+        $user = User::factory()->create();
+
+        $genre = Genre::factory()->create();
+
+        $book = Book::factory()->create([
+            'user_id' => $user->id,
+        ]);
+
+        $book->genres()->attach($genre);
+
+        $data = $this->validBookData($genre, [
+            'title' => 'タイトル',
+            'isbn' => '',
+            'published_date' => '',
+        ]);
+
+        // Act
+        $response = $this
+            ->actingAs($user)
+            ->put(route('books.update', $book), $data);
+
+        // Assert
+        $response->assertRedirect();
+
+        $this->assertDatabaseHas('books', [
+            'title' => 'タイトル',
+            'isbn' => null,
+            'published_date' => null,
+            'user_id' => $user->id,
+        ]);
+    }
+
     public function test_ゲストユーザーは書籍を更新できない(): void
     {
         // Arrange
@@ -679,7 +1080,7 @@ class BookControllerTest extends TestCase
 
         $this->assertDatabaseHas('books', [
             'id' => $book->id,
-            'published_date' => '2026-01-01',
+            'published_date' => '2026-01-01 00:00:00',
         ]);
     }
 

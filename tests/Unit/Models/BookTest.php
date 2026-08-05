@@ -2,9 +2,9 @@
 
 namespace Tests\Unit\Models;
 
-use App\Models\ReadingPlan;
 use App\Models\Book;
 use App\Models\Genre;
+use App\Models\ReadingPlan;
 use App\Models\Review;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;

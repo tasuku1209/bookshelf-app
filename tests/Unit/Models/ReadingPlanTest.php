@@ -3,8 +3,8 @@
 namespace Tests\Unit\Models;
 
 use App\Enums\ReadingPlanStatus;
-use App\Models\ReadingPlan;
 use App\Models\Book;
+use App\Models\ReadingPlan;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
