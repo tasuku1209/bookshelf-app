@@ -31,52 +31,39 @@ class ReportControllerTest extends TestCase
 
     public function test_認証済みユーザー自身のデータだけが集計対象になる(): void
     {
-        // Arrange target user
+        // Arrange
+        $genre = Genre::factory()->create();
+        $book = Book::factory()->create();
+        $book->genres()->attach($genre);
+
+        // target user
         $user = User::factory()->create();
-
-        $userGenre = Genre::factory()->create([
-            'name' => 'userジャンル',
-        ]);
-
-        $userBook = Book::factory()->create([
-            'title' => 'user書籍',
-        ]);
-        $userBook->genres()->attach($userGenre);
 
         Review::factory()->create([
             'user_id' => $user->id,
-            'book_id' => $userBook->id,
+            'book_id' => $book->id,
             'rating' => 5,
         ]);
 
         ReadingPlan::factory()->create([
             'user_id' => $user->id,
-            'book_id' => $userBook->id,
+            'book_id' => $book->id,
             'status' => ReadingPlanStatus::Completed,
         ]);
 
-        // Arrange other user
+        // other user
 
         $other = User::factory()->create();
 
-        $otherGenre = Genre::factory()->create([
-            'name' => 'otherジャンル',
-        ]);
-
-        $otherBook = Book::factory()->create([
-            'title' => 'other書籍',
-        ]);
-        $otherBook->genres()->attach($otherGenre);
-
         Review::factory()->create([
             'user_id' => $other->id,
-            'book_id' => $otherBook->id,
+            'book_id' => $book->id,
             'rating' => 1,
         ]);
 
         ReadingPlan::factory()->create([
             'user_id' => $other->id,
-            'book_id' => $otherBook->id,
+            'book_id' => $book->id,
             'status' => ReadingPlanStatus::Completed,
         ]);
 
@@ -103,13 +90,11 @@ class ReportControllerTest extends TestCase
 
         // top_rated_books
         $this->assertCount(1, $stats['top_rated_books']);
-        $response->assertSee('user書籍');
-        $response->assertDontSee('other書籍');
+        $this->assertSame(5, $stats['top_rated_books']->first()['rating']);
 
         // genre_ratings
         $this->assertCount(1, $stats['genre_ratings']);
-        $response->assertSee('userジャンル');
-        $response->assertDontSee('otherジャンル');
+        $this->assertSame(5, $stats['genre_ratings']->first()['average_rating']);
     }
 
     public function test_ゲストユーザーはマイ読書レポートを表示できない(): void
