@@ -109,7 +109,7 @@ class ReadingPlanController extends Controller
 
         if (
             $plan->status === ReadingPlanStatus::Overdue &&
-            $validated['target_date'] >= today()
+            $validated['target_date'] >= today()->toDateString()
         ) {
             $validated['status'] = ReadingPlanStatus::InProgress;
         }
