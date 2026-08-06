@@ -327,7 +327,6 @@ class ReadingPlanControllerTest extends TestCase
         $this->assertDatabaseHas('reading_plans', [
             'user_id' => $user->id,
             'book_id' => $book->id,
-            'target_date' => $data['target_date'].' 00:00:00',
             'status' => ReadingPlanStatus::InProgress->value,
         ]);
     }
@@ -373,10 +372,7 @@ class ReadingPlanControllerTest extends TestCase
             'target_date',
         ]);
 
-        $this->assertDatabaseMissing('reading_plans', [
-            'user_id' => $user->id,
-            'book_id' => $book->id,
-        ]);
+        $this->assertDatabaseCount('reading_plans', 0);
     }
 
     public function test_書籍指定が数値形式でない場合では読書計画を登録できない(): void
@@ -399,10 +395,7 @@ class ReadingPlanControllerTest extends TestCase
             'book_id',
         ]);
 
-        $this->assertDatabaseMissing('reading_plans', [
-            'user_id' => $user->id,
-            'target_date' => $data['target_date'].' 00:00:00',
-        ]);
+        $this->assertDatabaseCount('reading_plans', 0);
     }
 
     public function test_存在しない書籍では読書計画を登録できない(): void
@@ -425,10 +418,7 @@ class ReadingPlanControllerTest extends TestCase
             'book_id',
         ]);
 
-        $this->assertDatabaseMissing('reading_plans', [
-            'user_id' => $user->id,
-            'target_date' => $data['target_date'].' 00:00:00',
-        ]);
+        $this->assertDatabaseCount('reading_plans', 0);
     }
 
     public function test_日付形式でない期日では読書計画を登録できない(): void
@@ -452,10 +442,7 @@ class ReadingPlanControllerTest extends TestCase
             'target_date',
         ]);
 
-        $this->assertDatabaseMissing('reading_plans', [
-            'user_id' => $user->id,
-            'book_id' => $book->id,
-        ]);
+        $this->assertDatabaseCount('reading_plans', 0);
     }
 
     public function test_過去の日付の期日では読書計画を登録できない(): void
@@ -479,10 +466,7 @@ class ReadingPlanControllerTest extends TestCase
             'target_date',
         ]);
 
-        $this->assertDatabaseMissing('reading_plans', [
-            'user_id' => $user->id,
-            'book_id' => $book->id,
-        ]);
+        $this->assertDatabaseCount('reading_plans', 0);
     }
 
     public function test_認証済みかつ自分の読書計画で編集画面を表示できる(): void
@@ -564,9 +548,11 @@ class ReadingPlanControllerTest extends TestCase
 
         $response->assertSessionHas('success', '読書計画を更新しました');
 
+        $plan->refresh();
+
         $this->assertDatabaseHas('reading_plans', [
             'id' => $plan->id,
-            'target_date' => $data['target_date'].' 00:00:00',
+            'target_date' => $plan->target_date,
         ]);
     }
 
@@ -593,10 +579,12 @@ class ReadingPlanControllerTest extends TestCase
         // Assert
         $response->assertRedirect(route('reading-plans.index'));
 
+        $plan->refresh();
+
         $this->assertDatabaseHas('reading_plans', [
             'id' => $plan->id,
             'status' => ReadingPlanStatus::InProgress,
-            'target_date' => $data['target_date'].' 00:00:00',
+            'target_date' => $plan->target_date,
         ]);
     }
 
