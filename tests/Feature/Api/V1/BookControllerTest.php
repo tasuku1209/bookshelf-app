@@ -16,7 +16,6 @@ class BookControllerTest extends TestCase
     private function validBookData(Genre $genre, array $overrides = []): array
     {
         return array_merge([
-            'user_id' => User::factory()->create()->id,
             'title' => 'テストタイトル',
             'author' => 'テスト著者',
             'isbn' => '1111111111111',
@@ -423,30 +422,28 @@ class BookControllerTest extends TestCase
         $response->assertStatus(404);
     }
 
-    public function test_書籍が登録され201が返る(): void
+    public function test_認証済みユーザーでは書籍が登録され201が返る(): void
     {
         // Arrange
+        $user = User::factory()->create();
+        $token = $user->createToken('api-token');
+
         $genre = Genre::factory()->create();
 
-        $user = User::factory()->create();
-
         $data = $this->validBookData($genre, [
-            'user_id' => $user->id,
             'isbn' => '1111111111111',
         ]);
 
         // Act
-        $response = $this->postJson(
-            route('api.v1.books.store'),
-            $data
-        );
+        $response = $this
+            ->withToken($token->plainTextToken)
+            ->postJson(route('api.v1.books.store'), $data);
 
         // Assert
         $response->assertStatus(201);
 
         $this->assertDatabaseHas('books', [
             'isbn' => '1111111111111',
-            'user_id' => $user->id,
         ]);
 
         $book = Book::where('isbn', $data['isbn'])->first();
@@ -456,7 +453,7 @@ class BookControllerTest extends TestCase
             'genre_id' => $genre->id,
         ]);
 
-        $response->assertJsonFragment([
+        $response->assertJson([
             'message' => '書籍を登録しました',
         ]);
 
@@ -468,6 +465,7 @@ class BookControllerTest extends TestCase
         $response->assertJsonStructure([
             'data' => [
                 'id',
+                'user_id',
                 'title',
                 'author',
                 'isbn',
@@ -486,37 +484,35 @@ class BookControllerTest extends TestCase
         ]);
     }
 
-    public function test_存在しないユーザーでは書籍が登録できない(): void
+    public function test_未認証ユーザーは書籍を登録できない(): void
     {
         // Arrange
         $genre = Genre::factory()->create();
 
-        $data = $this->validBookData($genre, [
-            'user_id' => 99,
-        ]);
+        $data = $this->validBookData($genre);
 
         // Act
         $response = $this->postJson(route('api.v1.books.store'), $data);
 
         // Assert
-        $response->assertStatus(422);
-
-        $response->assertJsonValidationErrors([
-            'user_id',
-        ]);
+        $response->assertStatus(401);
     }
 
     public function test_必須項目未入力では書籍が登録できない(): void
     {
         // Arrange
-        $genre = Genre::factory()->create();
+        $user = User::factory()->create();
+        $token = $user->createToken('api-token');
 
+        $genre = Genre::factory()->create();
         $data = $this->validBookData($genre, [
             'title' => '',
         ]);
 
         // Act
-        $response = $this->postJson(route('api.v1.books.store'), $data);
+        $response = $this
+            ->withToken($token->plainTextToken)
+            ->postJson(route('api.v1.books.store'), $data);
 
         // Assert
         $response->assertStatus(422);
@@ -529,14 +525,18 @@ class BookControllerTest extends TestCase
     public function test_文字数超過では書籍が登録できない(): void
     {
         // Arrange
-        $genre = Genre::factory()->create();
+        $user = User::factory()->create();
+        $token = $user->createToken('api-token');
 
+        $genre = Genre::factory()->create();
         $data = $this->validBookData($genre, [
             'author' => str_repeat('あ', 256),
         ]);
 
         // Act
-        $response = $this->postJson(route('api.v1.books.store'), $data);
+        $response = $this
+            ->withToken($token->plainTextToken)
+            ->postJson(route('api.v1.books.store'), $data);
 
         // Assert
         $response->assertStatus(422);
@@ -546,17 +546,21 @@ class BookControllerTest extends TestCase
         ]);
     }
 
-    public function test_13桁でない_isb_nは書籍が登録できない(): void
+    public function test_13桁でない_isbnは書籍が登録できない(): void
     {
         // Arrange
-        $genre = Genre::factory()->create();
+        $user = User::factory()->create();
+        $token = $user->createToken('api-token');
 
+        $genre = Genre::factory()->create();
         $data = $this->validBookData($genre, [
             'isbn' => '123',
         ]);
 
         // Act
-        $response = $this->postJson(route('api.v1.books.store'), $data);
+        $response = $this
+            ->withToken($token->plainTextToken)
+            ->postJson(route('api.v1.books.store'), $data);
 
         // Assert
         $response->assertStatus(422);
@@ -566,21 +570,25 @@ class BookControllerTest extends TestCase
         ]);
     }
 
-    public function test_重複する_isb_nは書籍が登録できない(): void
+    public function test_重複する_isbnは書籍が登録できない(): void
     {
         // Arrange
-        $genre = Genre::factory()->create();
+        $user = User::factory()->create();
+        $token = $user->createToken('api-token');
 
         Book::factory()->create([
             'isbn' => '1111111111111',
         ]);
 
+        $genre = Genre::factory()->create();
         $data = $this->validBookData($genre, [
             'isbn' => '1111111111111',
         ]);
 
         // Act
-        $response = $this->postJson(route('api.v1.books.store'), $data);
+        $response = $this
+            ->withToken($token->plainTextToken)
+            ->postJson(route('api.v1.books.store'), $data);
 
         // Assert
         $response->assertStatus(422);
@@ -593,14 +601,18 @@ class BookControllerTest extends TestCase
     public function test_不正な日付では書籍が登録できない(): void
     {
         // Arrange
-        $genre = Genre::factory()->create();
+        $user = User::factory()->create();
+        $token = $user->createToken('api-token');
 
+        $genre = Genre::factory()->create();
         $data = $this->validBookData($genre, [
             'published_date' => 'not-a-date',
         ]);
 
         // Act
-        $response = $this->postJson(route('api.v1.books.store'), $data);
+        $response = $this
+            ->withToken($token->plainTextToken)
+            ->postJson(route('api.v1.books.store'), $data);
 
         // Assert
         $response->assertStatus(422);
@@ -610,17 +622,21 @@ class BookControllerTest extends TestCase
         ]);
     }
 
-    public function test_不正な_ur_lでは書籍が登録できない(): void
+    public function test_不正な_urlでは書籍が登録できない(): void
     {
         // Arrange
-        $genre = Genre::factory()->create();
+        $user = User::factory()->create();
+        $token = $user->createToken('api-token');
 
+        $genre = Genre::factory()->create();
         $data = $this->validBookData($genre, [
             'image_url' => 'not-a-url',
         ]);
 
         // Act
-        $response = $this->postJson(route('api.v1.books.store'), $data);
+        $response = $this
+            ->withToken($token->plainTextToken)
+            ->postJson(route('api.v1.books.store'), $data);
 
         // Assert
         $response->assertStatus(422);
@@ -633,14 +649,18 @@ class BookControllerTest extends TestCase
     public function test_存在しないジャンルでは書籍が登録できない(): void
     {
         // Arrange
-        $genre = Genre::factory()->create();
+        $user = User::factory()->create();
+        $token = $user->createToken('api-token');
 
+        $genre = Genre::factory()->create();
         $data = $this->validBookData($genre, [
             'genres' => [99],
         ]);
 
         // Act
-        $response = $this->postJson(route('api.v1.books.store'), $data);
+        $response = $this
+            ->withToken($token->plainTextToken)
+            ->postJson(route('api.v1.books.store'), $data);
 
         // Assert
         $response->assertStatus(422);
@@ -650,14 +670,18 @@ class BookControllerTest extends TestCase
         ]);
     }
 
-    public function test_書籍が更新され200が返る(): void
+    public function test_認証済みかつ自分の書籍では書籍が更新され200が返る(): void
     {
         // Arrange
+        $user = User::factory()->create();
+        $token = $user->createToken('api-token');
+
         $oldGenre = Genre::factory()->create();
 
         $newGenre = Genre::factory()->create();
 
         $book = Book::factory()->create([
+            'user_id' => $user->id,
             'title' => '更新前タイトル',
             'isbn' => '1111111111111',
         ]);
@@ -670,10 +694,9 @@ class BookControllerTest extends TestCase
         ]);
 
         // Act
-        $response = $this->putJson(
-            route('api.v1.books.update', $book),
-            $data
-        );
+        $response = $this
+            ->withToken($token->plainTextToken)
+            ->putJson(route('api.v1.books.update', $book), $data);
 
         // Assert
         $response->assertStatus(200);
@@ -696,7 +719,7 @@ class BookControllerTest extends TestCase
             'genre_id' => $newGenre->id,
         ]);
 
-        $response->assertJsonFragment([
+        $response->assertJson([
             'message' => '書籍を更新しました',
         ]);
 
@@ -707,6 +730,7 @@ class BookControllerTest extends TestCase
         $response->assertJsonStructure([
             'data' => [
                 'id',
+                'user_id',
                 'title',
                 'author',
                 'isbn',
@@ -725,13 +749,74 @@ class BookControllerTest extends TestCase
         ]);
     }
 
+    public function test_未認証ユーザーは書籍を更新できない(): void
+    {
+        // Arrange
+        $book = Book::factory()->create([
+            'title' => '更新前タイトル',
+        ]);
+
+        $genre = Genre::factory()->create();
+        $data = $this->validBookData($genre, [
+            'title' => '更新後タイトル',
+        ]);
+
+        // Act
+        $response = $this->putJson(route('api.v1.books.update', $book), $data);
+
+        // Assert
+        $response->assertStatus(401);
+
+        $this->assertDatabaseHas('books', [
+            'id' => $book->id,
+            'title' => '更新前タイトル',
+        ]);
+    }
+
+    public function test_認証済みでも他人の書籍は更新できない(): void
+    {
+        // Arrange
+        $otherUser = User::factory()->create();
+        $otherBook = Book::factory()->create([
+            'user_id' => $otherUser->id,
+            'title' => '更新前タイトル',
+        ]);
+
+        $user = User::factory()->create();
+        $token = $user->createToken('api-token');
+
+        $genre = Genre::factory()->create();
+        $data = $this->validBookData($genre, [
+            'title' => '更新後タイトル',
+        ]);
+
+        // Act
+        $response = $this
+            ->withToken($token->plainTextToken)
+            ->putJson(route('api.v1.books.update', $otherBook), $data);
+
+        // Assert
+        $response->assertStatus(403);
+
+        $this->assertDatabaseHas('books', [
+            'id' => $otherBook->id,
+            'title' => '更新前タイトル',
+        ]);
+    }
+
     public function test_書籍更新で存在しない書籍を指定した場合は404エラーが返る(): void
     {
+        // Arrange
+        $user = User::factory()->create();
+        $token = $user->createToken('api-token');
+
         // Act
-        $response = $this->putJson(
-            route('api.v1.books.update', 999),
-            []
-        );
+        $response = $this
+            ->withToken($token->plainTextToken)
+            ->putJson(
+                route('api.v1.books.update', 999),
+                []
+            );
 
         // Assert
         $response->assertStatus(404);
@@ -740,19 +825,20 @@ class BookControllerTest extends TestCase
     public function test_必須項目未入力では書籍が更新できない(): void
     {
         // Arrange
-        $genre = Genre::factory()->create();
+        $user = User::factory()->create();
+        $token = $user->createToken('api-token');
 
         $book = Book::factory()->create();
 
+        $genre = Genre::factory()->create();
         $data = $this->validBookData($genre, [
             'title' => '',
         ]);
 
         // Act
-        $response = $this->putJson(
-            route('api.v1.books.update', $book),
-            $data
-        );
+        $response = $this
+            ->withToken($token->plainTextToken)
+            ->putJson(route('api.v1.books.update', $book), $data);
 
         // Assert
         $response->assertStatus(422);
@@ -765,19 +851,20 @@ class BookControllerTest extends TestCase
     public function test_文字数超過では書籍が更新できない(): void
     {
         // Arrange
-        $genre = Genre::factory()->create();
+        $user = User::factory()->create();
+        $token = $user->createToken('api-token');
 
         $book = Book::factory()->create();
 
+        $genre = Genre::factory()->create();
         $data = $this->validBookData($genre, [
             'author' => str_repeat('あ', 256),
         ]);
 
         // Act
-        $response = $this->putJson(
-            route('api.v1.books.update', $book),
-            $data
-        );
+        $response = $this
+            ->withToken($token->plainTextToken)
+            ->putJson(route('api.v1.books.update', $book), $data);
 
         // Assert
         $response->assertStatus(422);
@@ -787,22 +874,23 @@ class BookControllerTest extends TestCase
         ]);
     }
 
-    public function test_13桁でない_isb_nは書籍が更新できない(): void
+    public function test_13桁でない_isbnは書籍が更新できない(): void
     {
         // Arrange
-        $genre = Genre::factory()->create();
+        $user = User::factory()->create();
+        $token = $user->createToken('api-token');
 
         $book = Book::factory()->create();
 
+        $genre = Genre::factory()->create();
         $data = $this->validBookData($genre, [
             'isbn' => '123',
         ]);
 
         // Act
-        $response = $this->putJson(
-            route('api.v1.books.update', $book),
-            $data
-        );
+        $response = $this
+            ->withToken($token->plainTextToken)
+            ->putJson(route('api.v1.books.update', $book), $data);
 
         // Assert
         $response->assertStatus(422);
@@ -812,10 +900,11 @@ class BookControllerTest extends TestCase
         ]);
     }
 
-    public function test_重複する_isb_nは書籍が更新できない(): void
+    public function test_重複する_isbnは書籍が更新できない(): void
     {
         // Arrange
-        $genre = Genre::factory()->create();
+        $user = User::factory()->create();
+        $token = $user->createToken('api-token');
 
         $book = Book::factory()->create([
             'isbn' => '1111111111111',
@@ -825,15 +914,15 @@ class BookControllerTest extends TestCase
             'isbn' => '2222222222222',
         ]);
 
+        $genre = Genre::factory()->create();
         $data = $this->validBookData($genre, [
             'isbn' => '2222222222222',
         ]);
 
         // Act
-        $response = $this->putJson(
-            route('api.v1.books.update', $book),
-            $data
-        );
+        $response = $this
+            ->withToken($token->plainTextToken)
+            ->putJson(route('api.v1.books.update', $book), $data);
 
         // Assert
         $response->assertStatus(422);
@@ -846,19 +935,20 @@ class BookControllerTest extends TestCase
     public function test_不正な日付では書籍が更新できない(): void
     {
         // Arrange
-        $genre = Genre::factory()->create();
+        $user = User::factory()->create();
+        $token = $user->createToken('api-token');
 
         $book = Book::factory()->create();
 
+        $genre = Genre::factory()->create();
         $data = $this->validBookData($genre, [
             'published_date' => 'not-a-date',
         ]);
 
         // Act
-        $response = $this->putJson(
-            route('api.v1.books.update', $book),
-            $data
-        );
+        $response = $this
+            ->withToken($token->plainTextToken)
+            ->putJson(route('api.v1.books.update', $book), $data);
 
         // Assert
         $response->assertStatus(422);
@@ -868,22 +958,23 @@ class BookControllerTest extends TestCase
         ]);
     }
 
-    public function test_不正な_ur_lでは書籍が更新できない(): void
+    public function test_不正な_urlでは書籍が更新できない(): void
     {
         // Arrange
-        $genre = Genre::factory()->create();
+        $user = User::factory()->create();
+        $token = $user->createToken('api-token');
 
         $book = Book::factory()->create();
 
+        $genre = Genre::factory()->create();
         $data = $this->validBookData($genre, [
             'image_url' => 'not-a-url',
         ]);
 
         // Act
-        $response = $this->putJson(
-            route('api.v1.books.update', $book),
-            $data
-        );
+        $response = $this
+            ->withToken($token->plainTextToken)
+            ->putJson(route('api.v1.books.update', $book), $data);
 
         // Assert
         $response->assertStatus(422);
@@ -893,22 +984,23 @@ class BookControllerTest extends TestCase
         ]);
     }
 
-    public function test_不正しないジャンルでは書籍が更新できない(): void
+    public function test_存在しないジャンルでは書籍が更新できない(): void
     {
         // Arrange
-        $genre = Genre::factory()->create();
+        $user = User::factory()->create();
+        $token = $user->createToken('api-token');
 
         $book = Book::factory()->create();
 
+        $genre = Genre::factory()->create();
         $data = $this->validBookData($genre, [
             'genres' => [99],
         ]);
 
         // Act
-        $response = $this->putJson(
-            route('api.v1.books.update', $book),
-            $data
-        );
+        $response = $this
+            ->withToken($token->plainTextToken)
+            ->putJson(route('api.v1.books.update', $book), $data);
 
         // Assert
         $response->assertStatus(422);
@@ -918,15 +1010,20 @@ class BookControllerTest extends TestCase
         ]);
     }
 
-    public function test_書籍が削除され204が返る(): void
+    public function test_認証済みかつ自分の書籍では書籍が削除され204が返る(): void
     {
         // Arrange
-        $book = Book::factory()->create();
+        $user = User::factory()->create();
+        $token = $user->createToken('api-token');
+
+        $book = Book::factory()->create([
+            'user_id' => $user->id,
+        ]);
 
         // Act
-        $response = $this->deleteJson(
-            route('api.v1.books.destroy', $book)
-        );
+        $response = $this
+            ->withToken($token->plainTextToken)
+            ->deleteJson(route('api.v1.books.destroy', $book));
 
         // Assert
         $response->assertStatus(204);
@@ -938,12 +1035,56 @@ class BookControllerTest extends TestCase
         ]);
     }
 
+    public function test_未認証ユーザーは書籍を削除できない(): void
+    {
+        // Arrange
+        $book = Book::factory()->create();
+
+        // Act
+        $response = $this->deleteJson(route('api.v1.books.destroy', $book));
+
+        // Assert
+        $response->assertStatus(401);
+
+        $this->assertDatabaseHas('books', [
+            'id' => $book->id,
+        ]);
+    }
+
+    public function test_認証済みでも他人の書籍は削除できない(): void
+    {
+        // Arrange
+        $otherUser = User::factory()->create();
+        $otherBook = Book::factory()->create([
+            'user_id' => $otherUser->id,
+        ]);
+
+        $user = User::factory()->create();
+        $token = $user->createToken('api-token');
+
+        // Act
+        $response = $this
+            ->withToken($token->plainTextToken)
+            ->deleteJson(route('api.v1.books.destroy', $otherBook));
+
+        // Assert
+        $response->assertStatus(403);
+
+        $this->assertDatabaseHas('books', [
+            'id' => $otherBook->id,
+        ]);
+    }
+
     public function test_存在しない書籍を指定した場合は404エラーが返る(): void
     {
+        // Arrange
+        $user = User::factory()->create();
+        $token = $user->createToken('api-token');
+
         // Act
-        $response = $this->deleteJson(
-            route('api.v1.books.destroy', 99)
-        );
+        $response = $this
+            ->withToken($token->plainTextToken)
+            ->deleteJson(route('api.v1.books.destroy', 99));
 
         // Assert
         $response->assertStatus(404);
