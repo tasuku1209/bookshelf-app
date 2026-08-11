@@ -12,6 +12,8 @@ class GenreController extends Controller
 {
     /**
      * ジャンル一覧
+     * 処理内容：ジャンル一覧画面を表示する。ジャンルごとの書籍数を取得し、ビューに渡す。
+     * @return View ジャンル一覧画面
      */
     public function index(): View
     {
@@ -24,6 +26,8 @@ class GenreController extends Controller
 
     /**
      * ジャンル登録画面
+     * 処理内容：ジャンル登録画面を表示する。
+     * @return View ジャンル登録画面
      */
     public function create(): View
     {
@@ -32,6 +36,9 @@ class GenreController extends Controller
 
     /**
      * ジャンル登録
+     * 処理内容：ジャンルを登録する。
+     * @param StoreGenreRequest $request ユーザーが入力したジャンル情報をバリデーション済みで取得
+     * @return RedirectResponse ジャンル一覧画面へリダイレクト
      */
     public function store(StoreGenreRequest $request): RedirectResponse
     {
@@ -48,6 +55,9 @@ class GenreController extends Controller
 
     /**
      * ジャンル詳細
+     * 処理内容：ジャンル詳細画面を表示する。ジャンルに関連する書籍一覧を取得し、ビューに渡す。
+     * @param Genre $genre ユーザーが選択したジャンル情報をルートパラメータより取得
+     * @return View ジャンル詳細画面
      */
     public function show(Genre $genre): View
     {
@@ -66,6 +76,9 @@ class GenreController extends Controller
 
     /**
      * ジャンル編集画面
+     * 処理内容：ジャンル編集画面を表示する。
+     * @param Genre $genre ユーザーが選択したジャンル情報をルートパラメータより取得
+     * @return View ジャンル編集画面
      */
     public function edit(Genre $genre): View
     {
@@ -76,6 +89,10 @@ class GenreController extends Controller
 
     /**
      * ジャンル更新
+     * 処理内容：ジャンルを更新する。
+     * @param UpdateGenreRequest $request ユーザーが入力したジャンル情報をバリデーション済みで取得
+     * @param Genre $genre ユーザーが選択したジャンル情報をルートパラメータより取得
+     * @return RedirectResponse ジャンル一覧画面へリダイレクト
      */
     public function update(UpdateGenreRequest $request, Genre $genre): RedirectResponse
     {
@@ -90,6 +107,9 @@ class GenreController extends Controller
 
     /**
      * ジャンル削除
+     * 処理内容：ジャンルを削除する。ジャンルに関連する書籍が存在する場合は削除できない。
+     * @param Genre $genre ユーザーが選択したジャンル情報をルートパラメータより取得
+     * @return RedirectResponse ジャンル一覧画面へリダイレクト
      */
     public function destroy(Genre $genre): RedirectResponse
     {
