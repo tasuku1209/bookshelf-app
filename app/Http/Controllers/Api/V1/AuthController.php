@@ -13,7 +13,8 @@ class AuthController extends Controller
     /**
      * ログイン
      * 処理内容：ユーザーがログインする際に、メールアドレスとパスワードを検証し、認証トークンを発行する。
-     * @param LoginRequest $request ユーザーが入力したメールアドレスとパスワードをバリデーション済みで取得
+     *
+     * @param  LoginRequest  $request  ユーザーが入力したメールアドレスとパスワードをバリデーション済みで取得
      * @return JsonResponse 認証トークンとユーザー情報を含むJSONレスポンス
      */
     public function login(LoginRequest $request): JsonResponse
@@ -46,7 +47,8 @@ class AuthController extends Controller
     /**
      * ログアウト
      * 処理内容：ユーザーがログアウトする際に、現在の認証トークンを削除する。
-     * @param Request $request ユーザー情報を取得するためのリクエストオブジェクト
+     *
+     * @param  Request  $request  ユーザー情報を取得するためのリクエストオブジェクト
      * @return JsonResponse ログアウト完了メッセージを含むJSONレスポンス
      */
     public function logout(Request $request): JsonResponse

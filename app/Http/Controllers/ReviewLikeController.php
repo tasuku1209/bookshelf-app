@@ -11,7 +11,8 @@ class ReviewLikeController extends Controller
     /**
      * レビューいいね追加・解除
      * 処理内容：ユーザーがレビューのいいねボタンを押下した際に、レビューのいいねの追加・解除を行う。
-     * @param Review $review ユーザーが選択したレビュー情報をルートパラメータより取得
+     *
+     * @param  Review  $review  ユーザーが選択したレビュー情報をルートパラメータより取得
      * @return RedirectResponse 前のページへリダイレクト
      */
     public function toggle(Review $review): RedirectResponse

@@ -12,13 +12,15 @@ use App\Http\Resources\BookResponseResource;
 use App\Models\Book;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
+use Illuminate\Support\Facades\DB;
 
 class BookController extends Controller
 {
     /**
      * 書籍一覧
      * 処理内容：書籍の一覧を取得し、キーワード検索やジャンル絞り込み、ページネーションを適用して返す。
-     * @param IndexBookRequest $request ユーザーが入力した検索条件をバリデーション済みで取得
+     *
+     * @param  IndexBookRequest  $request  ユーザーが入力した検索条件をバリデーション済みで取得
      * @return AnonymousResourceCollection 書籍一覧を含むJSONレスポンス
      */
     public function index(IndexBookRequest $request): AnonymousResourceCollection
@@ -51,7 +53,8 @@ class BookController extends Controller
     /**
      * 書籍登録
      * 処理内容：書籍を登録する。ジャンル情報を関連付ける。
-     * @param StoreBookRequest $request ユーザーが入力した書籍情報とジャンル情報をバリデーション済みで取得
+     *
+     * @param  StoreBookRequest  $request  ユーザーが入力した書籍情報とジャンル情報をバリデーション済みで取得
      * @return JsonResponse 書籍登録完了メッセージと登録した書籍情報を含むJSONレスポンス
      */
     public function store(StoreBookRequest $request): JsonResponse
@@ -64,9 +67,14 @@ class BookController extends Controller
 
         $validated['user_id'] = auth()->id();
 
-        $book = Book::create($validated);
+        $book = DB::transaction(function () use ($validated, $genres) {
 
-        $book->genres()->sync($genres);
+            $book = Book::create($validated);
+
+            $book->genres()->sync($genres);
+
+            return $book;
+        });
 
         $book->load([
             'genres' => function ($query) {
@@ -83,7 +91,8 @@ class BookController extends Controller
     /**
      * 書籍詳細
      * 処理内容：書籍の詳細情報を取得し、レビュー情報やジャンル情報を含めて返す。
-     * @param Book $book ユーザーが選択した書籍情報をルートパラメータより取得
+     *
+     * @param  Book  $book  ユーザーが選択した書籍情報をルートパラメータより取得
      * @return BookDetailResource 書籍詳細情報を含むJSONレスポンス
      */
     public function show(Book $book): BookDetailResource
@@ -112,8 +121,9 @@ class BookController extends Controller
     /**
      * 書籍更新
      * 処理内容：書籍を更新する。ジャンル情報を関連付ける。
-     * @param UpdateBookRequest $request ユーザーが入力した書籍情報とジャンル情報をバリデーション済みで取得
-     * @param Book $book ユーザーが選択した書籍情報をルートパラメータより取得
+     *
+     * @param  UpdateBookRequest  $request  ユーザーが入力した書籍情報とジャンル情報をバリデーション済みで取得
+     * @param  Book  $book  ユーザーが選択した書籍情報をルートパラメータより取得
      * @return JsonResponse 書籍更新完了メッセージと更新した書籍情報を含むJSONレスポンス
      */
     public function update(UpdateBookRequest $request, Book $book): JsonResponse
@@ -126,9 +136,14 @@ class BookController extends Controller
 
         unset($validated['genres']);
 
-        $book->update($validated);
+        $book = DB::transaction(function () use ($book, $validated, $genres) {
 
-        $book->genres()->sync($genres);
+            $book->update($validated);
+
+            $book->genres()->sync($genres);
+
+            return $book;
+        });
 
         $book->load([
             'genres' => function ($query) {
@@ -145,7 +160,8 @@ class BookController extends Controller
     /**
      * 書籍削除
      * 処理内容：書籍を削除する。
-     * @param Book $book ユーザーが選択した書籍情報をルートパラメータより取得
+     *
+     * @param  Book  $book  ユーザーが選択した書籍情報をルートパラメータより取得
      * @return JsonResponse 書籍削除完了メッセージを含むJSONレスポンス
      */
     public function destroy(Book $book): JsonResponse
