@@ -1,19 +1,24 @@
 # BookShelf 書籍レビューアプリ
 
 書籍レビューの機能を実装したLaravelプロジェクトです。
-ユーザーは書籍を登録・閲覧し、レビューの投稿やお気に入り登録ができます。
-ジャンルによる分類やレビューへのいいね機能、平均評価に基づくランキング機能も備えています。
+ユーザーは書籍を登録・閲覧し、レビューの投稿やお気に入り登録、読書計画の管理ができます。
+ジャンルによる分類やレビューへのいいね機能、平均評価に基づくランキング機能、自身の読書統計機能も備えています。
 
 ## 機能一覧
 
 - ユーザー認証（登録、ログイン、ログアウト）
-- 書籍一覧表示・詳細表示・登録・編集・削除
-- 書籍のお気に入り一覧表示・お気に入り登録・お気に入り解除
-- 書籍へのレビュー投稿・編集・削除
-- レビューへのいいね登録・いいね解除
-- ジャンル一覧表示・詳細表示・登録・編集・削除
-- ランキング（レビュー平均評価に基づくTOP10）一覧表示
-- 公開API（書籍CRUD）
+- 書籍管理（書籍一覧表示・書籍詳細表示・書籍登録・書籍編集・書籍削除）
+- 書籍検索（キーワード検索、ジャンルフィルタ、並び順ソート）
+- 書籍ISBN検索（Google Books API連携した書籍情報自動取得）
+- お気に入り（お気に入り書籍一覧表示、お気に入り登録・お気に入り解除）
+- レビュー（レビュー登録・レビュー編集・レビュー削除）
+- レビューへのいいね（いいね登録・いいね解除）
+- ジャンル管理（ジャンル一覧表示・ジャンル詳細表示・ジャンル登録・ジャンル編集・ジャンル削除）
+- 読書計画登録機能（読書計画一覧表示・読書計画登録・読書計画編集・読書計画削除）
+- ランキング（書籍のレビュー平均評価に基づくTOP10）一覧表示
+- マイ読書レポート（ユーザー毎のレビュー評価値などを統計化）
+- 通知機能（通知一覧表示、既読機能、バッチスケジュール：毎日20時）
+- 公開API（Laravel Sanctumによる認証、書籍CRUD）
 
 ## 使用技術
 
@@ -114,7 +119,7 @@ http://localhost
     このコマンドの入力後、下記のエラーが表示されることがあります。
     ```bash
        Illuminate\Database\QueryException 
-      SQLSTATE[HY000] [1044] Access denied for user 'sail'@'%' to database 'contact-form-app' (Connection: mysql, SQL: select table_name as `name`,         (data_length + index_length) as `size`, table_comment as `comment`, engine as `engine`, table_collation as `collation` from information_schema.tables where table_schema = 'contact-form-app' and table_type in ('BASE TABLE', 'SYSTEM VERSIONED') order by table_name)
+      SQLSTATE[HY000] [1044] Access denied for user 'sail'@'%' to database 'laravel' (Connection: mysql, SQL: select table_name as `name`,         (data_length + index_length) as `size`, table_comment as `comment`, engine as `engine`, table_collation as `collation` from information_schema.tables where table_schema = 'laravel' and table_type in ('BASE TABLE', 'SYSTEM VERSIONED') order by table_name)
 
       at vendor/laravel/framework/src/Illuminate/Database/Connection.php:829
         825▕                     $this->getName(), $query, $this->prepareBindings($bindings), $e
@@ -155,6 +160,16 @@ http://localhost
 
     ブラウザで [http://localhost](http://localhost) にアクセスします。
 
+9. **外部APIの設定**
+
+    ISBN検索機能ではGoogle Books APIを使用しています。
+    本アプリを動作させるには、Google Books APIのAPIキーを取得し、
+    `.env` に以下を設定してください。
+    ```bash
+    GOOGLE_BOOKS_API_KEY=取得したAPIキー
+    ```
+
+
 ## テスト実行
 
 ```bash
@@ -169,13 +184,17 @@ sail artisan test --coverage
 
 ## APIエンドポイント一覧
 
-認証不要の公開APIです。全エンドポイントは `/api/v1` プレフィックス配下に定義されています。
+全エンドポイントは `/api/v1` プレフィックス配下に定義されています。
+認証が必要なエンドポイントは、ログアウト、書籍登録、書籍更新、書籍削除です。
+書籍更新・削除には、認証に加え、Policyによる所有者チェックを設定しています。
 
 | HTTPメソッド | URI | 概要 |
 |---|---|---|
+| POST | /api/v1/login | ログイン |
+| POST | /api/v1/logout | ログアウト |
 | GET | /api/v1/books |書籍一覧（検索・ジャンルソート・ページネーション付き） |
 | GET | /api/v1/books/{book} | 書籍詳細（ジャンル情報・レビュー情報含む） |
-| POST | /api/v1/books | 書籍新規登録 |
+| POST | /api/v1/books | 書籍登録 |
 | PUT | /api/v1/books/{book} | 書籍更新 |
 | DELETE | /api/v1/books/{book} | 書籍削除 |
 

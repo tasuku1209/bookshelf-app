@@ -9,6 +9,7 @@ use App\Models\Book;
 use App\Models\Genre;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Illuminate\View\View;
 
@@ -16,6 +17,10 @@ class BookController extends Controller
 {
     /**
      * ISBN検索
+     * 処理内容：Google Books APIを用いてISBNから書籍情報を検索する
+     *
+     * @param  string  $isbn  ユーザーが入力したISBN番号をパスパラメータより取得
+     * @return JsonResponse Google Books APIより取得した書籍情報をJSON形式で返す
      */
     public function searchByIsbn(string $isbn): JsonResponse
     {
@@ -62,6 +67,10 @@ class BookController extends Controller
 
     /**
      * 書籍一覧
+     * 処理内容：書籍一覧画面を表示する。また、検索条件に応じて書籍を絞り込む。
+     *
+     * @param  IndexBookRequest  $request  ユーザーが入力した検索条件をバリデーション済みで取得
+     * @return View 書籍一覧画面
      */
     public function index(IndexBookRequest $request): View
     {
@@ -88,6 +97,9 @@ class BookController extends Controller
 
     /**
      * 書籍登録画面
+     * 処理内容：書籍登録画面を表示する。ジャンル一覧を取得し、ビューに渡す。
+     *
+     * @return View 書籍登録画面
      */
     public function create(): View
     {
@@ -98,6 +110,10 @@ class BookController extends Controller
 
     /**
      * 書籍登録
+     * 処理内容：書籍を登録する。ジャンル情報を関連付ける。
+     *
+     * @param  StoreBookRequest  $request  ユーザーが入力した書籍情報とジャンル情報をバリデーション済みで取得
+     * @return RedirectResponse 書籍詳細画面へリダイレクト
      */
     public function store(StoreBookRequest $request): RedirectResponse
     {
@@ -109,9 +125,14 @@ class BookController extends Controller
 
         $validated['user_id'] = auth()->id();
 
-        $book = Book::create($validated);
+        $book = DB::transaction(function () use ($validated, $genres) {
 
-        $book->genres()->attach($genres);
+            $book = Book::create($validated);
+
+            $book->genres()->attach($genres);
+
+            return $book;
+        });
 
         return redirect()
             ->route('books.show', $book)
@@ -120,6 +141,10 @@ class BookController extends Controller
 
     /**
      * 書籍詳細
+     * 処理内容：書籍詳細画面を表示する。ジャンル情報とレビュー情報を取得し、ビューに渡す。
+     *
+     * @param  Book  $book  ユーザーが選択した書籍情報をルートパラメータより取得
+     * @return View 書籍詳細画面
      */
     public function show(Book $book): View
     {
@@ -143,6 +168,10 @@ class BookController extends Controller
 
     /**
      * 書籍編集画面
+     * 処理内容：書籍編集画面を表示する。ジャンル一覧を取得し、ビューに渡す。
+     *
+     * @param  Book  $book  ユーザーが選択した書籍情報をルートパラメータより取得
+     * @return View 書籍編集画面
      */
     public function edit(Book $book): View
     {
@@ -157,6 +186,11 @@ class BookController extends Controller
 
     /**
      * 書籍更新
+     * 処理内容：書籍を更新する。ジャンル情報を関連付ける。
+     *
+     * @param  UpdateBookRequest  $request  ユーザーが入力した書籍情報とジャンル情報をバリデーション済みで取得
+     * @param  Book  $book  ユーザーが選択した書籍情報をルートパラメータより取得
+     * @return RedirectResponse 書籍詳細画面へリダイレクト
      */
     public function update(UpdateBookRequest $request, Book $book): RedirectResponse
     {
@@ -168,9 +202,13 @@ class BookController extends Controller
 
         unset($validated['genres']);
 
-        $book->update($validated);
+        $book = DB::transaction(function () use ($book, $validated, $genres) {
+            $book->update($validated);
 
-        $book->genres()->sync($genres);
+            $book->genres()->sync($genres);
+
+            return $book;
+        });
 
         return redirect()
             ->route('books.show', $book)
@@ -179,6 +217,10 @@ class BookController extends Controller
 
     /**
      * 書籍削除
+     * 処理内容：書籍を削除する。
+     *
+     * @param  Book  $book  ユーザーが選択した書籍情報をルートパラメータより取得
+     * @return RedirectResponse 書籍一覧画面へリダイレクト
      */
     public function destroy(Book $book): RedirectResponse
     {

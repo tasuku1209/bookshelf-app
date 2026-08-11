@@ -25,6 +25,9 @@ class SendReadingPlanReminderCommand extends Command
 
     /**
      * 実行
+     * 処理内容：処理内容：期限超過状態への更新と、期日3日前・当日・3日後のリマインダー通知を実行する。
+     *
+     * @return int コマンドの実行結果
      */
     public function handle(): int
     {
@@ -41,6 +44,7 @@ class SendReadingPlanReminderCommand extends Command
 
     /**
      * 期限超過状態へ更新
+     * 処理内容：読書計画のステータスが「進行中」で、期日が過ぎているものを「期限超過」に更新する。
      */
     private function markOverduePlans(): void
     {
@@ -54,6 +58,7 @@ class SendReadingPlanReminderCommand extends Command
 
     /**
      * 期日3日前のリマインダー通知
+     * 処理内容：読書計画のステータスが「進行中」で、期日の3日前のものに対してリマインダー通知を作成保存する。
      */
     private function sendThreeDaysBeforeReminder(): void
     {
@@ -75,6 +80,7 @@ class SendReadingPlanReminderCommand extends Command
 
     /**
      * 期日当日のリマインダー通知
+     * 処理内容：読書計画のステータスが「進行中」で、期日が当日のものに対してリマインダー通知を作成保存する。
      */
     private function sendTodayReminder(): void
     {
@@ -96,6 +102,7 @@ class SendReadingPlanReminderCommand extends Command
 
     /**
      * 期日3日後のリマインダー通知
+     * 処理内容：読書計画のステータスが「期限超過」で、期日の3日後のものに対してリマインダー通知を作成保存する。
      */
     private function sendThreeDaysAfterReminder(): void
     {

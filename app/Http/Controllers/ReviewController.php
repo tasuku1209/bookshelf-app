@@ -12,6 +12,11 @@ class ReviewController extends Controller
 {
     /**
      * レビュー投稿
+     * 処理内容：レビューを登録する。
+     *
+     * @param  ReviewRequest  $request  ユーザーが入力したレビュー情報をバリデーション済みで取得
+     * @param  Book  $book  ユーザーが選択した書籍情報をルートパラメータより取得
+     * @return RedirectResponse 書籍詳細画面へリダイレクト
      */
     public function store(ReviewRequest $request, Book $book): RedirectResponse
     {
@@ -29,6 +34,10 @@ class ReviewController extends Controller
 
     /**
      * レビュー編集画面
+     * 処理内容：レビュー編集画面を表示する。
+     *
+     * @param  Review  $review  ユーザーが選択したレビュー情報をルートパラメータより取得
+     * @return View レビュー編集画面
      */
     public function edit(Review $review): View
     {
@@ -39,6 +48,11 @@ class ReviewController extends Controller
 
     /**
      * レビュー更新
+     * 処理内容：レビューを更新する。
+     *
+     * @param  ReviewRequest  $request  ユーザーが入力したレビュー情報をバリデーション済みで取得
+     * @param  Review  $review  ユーザーが選択したレビュー情報をルートパラメータより取得
+     * @return RedirectResponse 書籍詳細画面へリダイレクト
      */
     public function update(ReviewRequest $request, Review $review): RedirectResponse
     {
@@ -53,6 +67,10 @@ class ReviewController extends Controller
 
     /**
      * レビュー削除
+     * 処理内容：レビューを削除する。
+     *
+     * @param  Review  $review  ユーザーが選択したレビュー情報をルートパラメータより取得
+     * @return RedirectResponse 書籍詳細画面へリダイレクト
      */
     public function destroy(Review $review): RedirectResponse
     {
