@@ -46,7 +46,7 @@ class ReadingPlanSeeder extends Seeder
             'user_id' => $userB->id,
             'book_id' => 11,
             'target_date' => Carbon::today(),
-            'status' => ReadingPlanStatus::Completed,
+            'status' => ReadingPlanStatus::InProgress,
             'completed_at' => Carbon::today(),
         ]);
     }

@@ -546,7 +546,7 @@ class BookControllerTest extends TestCase
         ]);
     }
 
-    public function test_13桁でない_isbnは書籍が登録できない(): void
+    public function test_13桁でないisbnは書籍が登録できない(): void
     {
         // Arrange
         $user = User::factory()->create();
@@ -570,7 +570,7 @@ class BookControllerTest extends TestCase
         ]);
     }
 
-    public function test_重複する_isbnは書籍が登録できない(): void
+    public function test_重複するisbnは書籍が登録できない(): void
     {
         // Arrange
         $user = User::factory()->create();
@@ -622,7 +622,7 @@ class BookControllerTest extends TestCase
         ]);
     }
 
-    public function test_不正な_urlでは書籍が登録できない(): void
+    public function test_不正なurlでは書籍が登録できない(): void
     {
         // Arrange
         $user = User::factory()->create();
@@ -874,7 +874,7 @@ class BookControllerTest extends TestCase
         ]);
     }
 
-    public function test_13桁でない_isbnは書籍が更新できない(): void
+    public function test_13桁でないisbnは書籍が更新できない(): void
     {
         // Arrange
         $user = User::factory()->create();
@@ -900,7 +900,7 @@ class BookControllerTest extends TestCase
         ]);
     }
 
-    public function test_重複する_isbnは書籍が更新できない(): void
+    public function test_重複するisbnは書籍が更新できない(): void
     {
         // Arrange
         $user = User::factory()->create();
@@ -958,7 +958,7 @@ class BookControllerTest extends TestCase
         ]);
     }
 
-    public function test_不正な_urlでは書籍が更新できない(): void
+    public function test_不正なurlでは書籍が更新できない(): void
     {
         // Arrange
         $user = User::factory()->create();
