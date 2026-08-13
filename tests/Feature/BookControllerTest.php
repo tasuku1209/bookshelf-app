@@ -27,7 +27,7 @@ class BookControllerTest extends TestCase
         ], $overrides);
     }
 
-    public function test_isb_n検索で_isb_nに該当する書籍情報を取得できる(): void
+    public function test_isbn検索でisbnに該当する書籍情報を取得できる(): void
     {
         // Arrange
         $user = User::factory()->create();
@@ -68,7 +68,7 @@ class BookControllerTest extends TestCase
         ]);
     }
 
-    public function test_isb_n検索で未認証の場合はログイン画面へリダイレクトされる(): void
+    public function test_isbn検索で未認証の場合はログイン画面へリダイレクトされる(): void
     {
         // Arrange
         $isbn = '1234567890123';
@@ -105,7 +105,7 @@ class BookControllerTest extends TestCase
         ]);
     }
 
-    public function test_isb_n検索でエラーとなった場合は500を返す(): void
+    public function test_isbn検索でエラーとなった場合は500を返す(): void
     {
         // Arrange
         $user = User::factory()->create();
@@ -128,7 +128,7 @@ class BookControllerTest extends TestCase
         ]);
     }
 
-    public function test_isb_n検索で_ap_i通信の例外が発生した場合は500を返す(): void
+    public function test_isbn検索でapi通信の例外が発生した場合は500を返す(): void
     {
         // Arrange
         $user = User::factory()->create();
@@ -521,7 +521,7 @@ class BookControllerTest extends TestCase
         $response->assertSessionHas('success', '書籍を登録しました');
     }
 
-    public function test_isb_n、出版日を空白とした書籍でも登録できる(): void
+    public function test_isbn、出版日を空白とした書籍でも登録できる(): void
     {
         // Arrange
         $user = User::factory()->create();
@@ -674,7 +674,7 @@ class BookControllerTest extends TestCase
         ]);
     }
 
-    public function test_画像_urlが_url形式でない場合は登録できない(): void
+    public function test_画像urlがurl形式でない場合は登録できない(): void
     {
         // Arrange
         $user = User::factory()->create();
@@ -864,7 +864,7 @@ class BookControllerTest extends TestCase
         $response->assertSessionHas('success', '書籍を更新しました');
     }
 
-    public function test_isb_n、出版日を空白とした書籍でも更新できる(): void
+    public function test_isbn、出版日を空白とした書籍でも更新できる(): void
     {
         // Arrange
         $user = User::factory()->create();
@@ -1084,7 +1084,7 @@ class BookControllerTest extends TestCase
         ]);
     }
 
-    public function test_画像_urlが_url形式でない場合は更新できない(): void
+    public function test_画像urlがurl形式でない場合は更新できない(): void
     {
         // Arrange
         $user = User::factory()->create();
@@ -1149,7 +1149,7 @@ class BookControllerTest extends TestCase
         ]);
     }
 
-    public function test_重複する_isbnは更新できない(): void
+    public function test_重複するisbnは更新できない(): void
     {
         // Arrange
         $user = User::factory()->create();

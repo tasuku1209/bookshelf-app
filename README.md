@@ -54,7 +54,12 @@ http://localhost
     git clone https://github.com/tasuku1209/bookshelf-app.git
     ```
 
-2. **.envファイルの準備**
+2. **プロジェクトリポジトリへ移動**
+    ```bash
+    cd bookshelf-app
+    ```
+
+3. **.envファイルの準備**
 
     `.env.example` をコピーして `.env` を作成します。
 
@@ -73,7 +78,7 @@ http://localhost
     DB_PASSWORD=password
     ```
 
-3. **Composer依存パッケージのインストール**
+4. **Composer依存パッケージのインストール**
 
     プロジェクトの初回セットアップ時は、`vendor` ディレクトリが存在しないため `sail` コマンドを使用できません。
     以下のDockerコマンドを実行して、コンテナ内で `composer install` を実行します。
@@ -87,7 +92,7 @@ http://localhost
         composer install --ignore-platform-reqs
     ```
 
-4. **Laravel Sailの起動**
+5. **Laravel Sailの起動**
 
     以下のコマンドでDockerコンテナを起動します。
 
@@ -103,13 +108,13 @@ http://localhost
     > alias sail='[ -f sail ] && bash sail || bash vendor/bin/sail'
     > ```
 
-5. **アプリケーションキーの生成**
+6. **アプリケーションキーの生成**
 
     ```bash
     sail artisan key:generate
     ```
 
-6. **データベースのマイグレーションと初期データ投入**
+7. **データベースのマイグレーションと初期データ投入**
 
     以下のコマンドでテーブルを作成し、ダミーデータを投入します。
 
@@ -146,7 +151,7 @@ http://localhost
     ```
     
 
-7. **フロントエンドのビルド**
+8. **フロントエンドのビルド**
 
     ```bash
     sail npm install
@@ -156,17 +161,29 @@ http://localhost
 
     `npm run dev` は開発中は起動したままにしてください。
 
-8. **アプリケーションへのアクセス**
+9. **アプリケーションへのアクセス**
 
     ブラウザで [http://localhost](http://localhost) にアクセスします。
 
-9. **外部APIの設定**
+10. **外部APIの設定**
 
     ISBN検索機能ではGoogle Books APIを使用しています。
     本アプリを動作させるには、Google Books APIのAPIキーを取得し、
     `.env` に以下を設定してください。
     ```bash
     GOOGLE_BOOKS_API_KEY=取得したAPIキー
+    ```
+
+11. **通知バッチの設定**
+
+    読書計画の期限に応じたリマインダー通知を、毎日20時に自動実行します。
+    ```bash
+    sail artisan schedule:work
+    ```
+
+    動作確認などで通知バッチを手動実行する場合は、以下のコマンドを実行します。
+    ```bash
+    sail artisan reading-plans:remind
     ```
 
 
